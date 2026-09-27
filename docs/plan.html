@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Command Center Plan</title>
+<style>
+  :root {
+    --bg: #fafaf9; --surface: #ffffff; --text: #1c1917; --muted: #57534e;
+    --border: #e7e5e4; --accent: #4338ca; --accent-soft: #eef2ff;
+    --be: #0f766e; --web: #b45309; --mob: #7e22ce; --ops: #475569;
+    --warn: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c0a09; --surface: #1c1917; --text: #f5f5f4; --muted: #a8a29e;
+      --border: #292524; --accent: #a5b4fc; --accent-soft: #1e1b4b;
+      --be: #5eead4; --web: #fbbf24; --mob: #d8b4fe; --ops: #94a3b8;
+      --warn: #fca5a5;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2rem; margin: 0 0 4px; }
+  h2 { font-size: 1.35rem; margin: 0; }
+  h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 0 6px; }
+  p { margin: 6px 0; }
+  .sub { color: var(--muted); margin-bottom: 24px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin: 16px 0; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .facts div { background: var(--accent-soft); border-radius: 8px; padding: 10px 12px; font-size: .9rem; }
+  .facts b { display: block; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .timeline { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  .timeline a { display: flex; gap: 12px; align-items: baseline; text-decoration: none; color: inherit;
+    padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+  .timeline a:hover { border-color: var(--accent); }
+  .timeline .n { font-weight: 700; color: var(--accent); min-width: 2.2rem; }
+  .timeline .w { margin-left: auto; color: var(--muted); font-size: .85rem; white-space: nowrap; }
+  .head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline; }
+  .head .n { background: var(--accent); color: var(--bg); border-radius: 6px; padding: 1px 8px; font-weight: 700; font-size: .85rem; }
+  .est { margin-left: auto; color: var(--muted); font-size: .85rem; }
+  .goal { color: var(--muted); margin: 6px 0 0; }
+  ul.check { list-style: none; padding: 0; margin: 0; }
+  ul.check li { padding-left: 26px; position: relative; margin: 3px 0; }
+  ul.check li::before { content: ""; position: absolute; left: 2px; top: .38em; width: 14px; height: 14px;
+    border: 2px solid var(--border); border-radius: 4px; }
+  ul.plain { margin: 0; padding-left: 20px; }
+  .tag { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .04em; border-radius: 4px;
+    padding: 0 6px; margin-right: 6px; border: 1px solid currentColor; vertical-align: 1px; }
+  .be { color: var(--be); } .web { color: var(--web); } .mob { color: var(--mob); } .ops { color: var(--ops); }
+  .risk { color: var(--warn); }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  code { font: .88em ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+  pre { background: var(--accent-soft); padding: 12px; border-radius: 8px; overflow-x: auto; font-size: .85rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+  @media (max-width: 480px) { .est { margin-left: 0; } .timeline .w { display: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Personal Command Center: Delivery Plan</h1>
+<p class="sub">Experience → Decision → Prediction → Outcome → Review → Learning → Future Decision. Angular website and Flutter mobile app on one Go + PostgreSQL backend, self-hosted so it is reachable from anywhere.</p>
+
+<div class="card">
+  <div class="facts">
+    <div><b>Backend</b>Go modular monolith, REST + OpenAPI</div>
+    <div><b>Database</b>PostgreSQL, pgvector, FTS</div>
+    <div><b>Web</b>Angular, Tailwind, CDK</div>
+    <div><b>Mobile</b>Flutter (iOS + Android)</div>
+    <div><b>Files</b>MinIO (S3-compatible)</div>
+    <div><b>Hosting</b>One VPS, Docker Compose, Caddy TLS</div>
+  </div>
+  <h3>Ground rules</h3>
+  <ul class="plain">
+    <li>Every change is developed on a feature branch, merged to <code>main</code>, and the branch is deleted.</li>
+    <li>OpenAPI is the single contract. Web and mobile use generated clients; CI fails on drift.</li>
+    <li>Decisions and reviews are immutable history. AI output is always a draft until the user confirms.</li>
+    <li>The product must stay fully useful with AI disabled.</li>
+    <li>Time estimates assume one developer working part-time-to-full-time; treat them as relative sizes.</li>
+  </ul>
+  <h3>Repository layout</h3>
+<pre>backend/    Go API + worker, migrations, openapi.yaml
+web/        Angular app
+mobile/     Flutter app
+deploy/     docker-compose, Caddyfile, backup scripts
+docs/       spec, design docs, this plan</pre>
+</div>
+
+<h2 style="margin-top:28px">Roadmap at a glance</h2>
+<ol class="timeline" style="margin-top:12px">
+  <li><a href="#m0"><span class="n">M0</span> Foundations: design docs, scaffold, CI <span class="w">1-2 wk</span></a></li>
+  <li><a href="#m1"><span class="n">M1</span> Core backend: decisions, versions, relations <span class="w">2-3 wk</span></a></li>
+  <li><a href="#m2"><span class="n">M2</span> Review loop: reviews, scheduler, notifications <span class="w">2-3 wk</span></a></li>
+  <li><a href="#m3"><span class="n">M3</span> Auth + first web milestone <span class="w">3-4 wk</span></a></li>
+  <li><a href="#m4"><span class="n">M4</span> Deploy: live on a VPS, reachable anywhere <span class="w">1 wk</span></a></li>
+  <li><a href="#m5"><span class="n">M5</span> Flutter mobile app <span class="w">4-5 wk</span></a></li>
+  <li><a href="#m6"><span class="n">M6</span> History: timeline, search, sources, files <span class="w">3-4 wk</span></a></li>
+  <li><a href="#m7"><span class="n">M7</span> AI layer (optional, off by default) <span class="w">3-4 wk</span></a></li>
+  <li><a href="#m8"><span class="n">M8</span> Integrations <span class="w">3-4 wk</span></a></li>
+  <li><a href="#m9"><span class="n">M9</span> Hardening: security, export, observability <span class="w">2-3 wk</span></a></li>
+</ol>
+<p class="sub" style="margin-top:10px"><b>Usable checkpoints:</b> end of M3 is the first complete decision loop on web; end of M4 is real use from any device; end of M5 adds mobile.</p>
+
+<!-- M0 -->
+<section class="card" id="m0">
+  <div class="head"><span class="n">M0</span><h2>Foundations</h2><span class="est">1-2 weeks</span></div>
+  <p class="goal">Agree the design on paper, then stand up an empty but healthy system.</p>
+  <h3>Deliverables</h3>
+  <ul class="check">
+    <li><span class="tag ops">DOCS</span>Architecture overview, domain model, PostgreSQL schema, ER diagram, review state machine, ingestion architecture, AI architecture, API outline, frontend information architecture</li>
+    <li><span class="tag ops">DOCS</span>Commit <code>docs/prompt.md</code> and these design docs</li>
+    <li><span class="tag be">BE</span>Go module with one folder per domain module: decisions, reviews, events, sources, entities, goals, search, notifications, ingestion, ai</li>
+    <li><span class="tag be">BE</span>Config loading, structured logging, <code>/healthz</code> and <code>/readyz</code>, migration runner</li>
+    <li><span class="tag ops">OPS</span><code>docker-compose.yml</code> with Postgres + pgvector and MinIO; Makefile with build, test, lint, migrate, run</li>
+    <li><span class="tag ops">OPS</span>CI: build, vet, test on every PR; OpenAPI lint</li>
+    <li><span class="tag ops">DOCS</span>Fill in the Commands and layout sections of <code>AGENTS.md</code></li>
+  </ul>
+  <h3>Exit criteria</h3>
+  <ul class="plain">
+    <li><code>docker compose up</code> gives a healthy <code>/healthz</code> and migrations apply to an empty database.</li>
+    <li>CI is green on a trivial PR.</li>
+  </ul>
+  <h3>Depends on</h3><p>Nothing.</p>
+  <h3>Risks</h3><p class="risk">Over-designing on paper. Keep docs short and revise them as code lands.</p>
+</section>
+
+<!-- M1 -->
+<section class="card" id="m1">
+  <div class="head"><span class="n">M1</span><h2>Core backend</h2><span class="est">2-3 weeks</span></div>
+  <p class="goal">Store decisions the way the spec demands: structured, versioned, never rewritten.</p>
+  <h3>Deliverables</h3>
+  <ul class="check">
+    <li><span class="tag be">BE</span>Migrations: decisions, decision_versions, assumptions, events, entities, relations, goals, audit_log (UUID keys, foreign keys, indexes; JSONB only where flexible)</li>
+    <li><span class="tag be">BE</span>Decision CRUD with all spec fields: context, objective, alternatives, constraints, assumptions, emotional context, expected outcome, success and failure criteria, confidence, importance, reversibility, tags</li>
+    <li><span class="tag be">BE</span>Immutable versioning: any material edit writes a new version, v1 is never destroyed</li>
+    <li><span class="tag be">BE</span>Relations: supersedes, modifies, reverses, depends_on, influenced_by, resulted_in, contradicts, supports; decision-to-goal links</li>
+    <li><span class="tag be">BE</span>Events and entities CRUD</li>
+    <li><span class="tag be">BE</span>Audit log entries on every write</li>
+    <li><span class="tag be">BE</span>Realistic seed data (career, technical, financial decisions with assumptions)</li>
+    <li><span class="tag ops">API</span><code>openapi.yaml</code> published as the source of truth</li>
+  </ul>
+  <h3>Exit criteria</h3>
+  <ul class="plain">
+    <li>Tests pass for decision creation, versioning (v1 preserved), and relations.</li>
+    <li>Seed data loads and the API returns a full decision with assumptions and relations.</li>
+  </ul>
+  <h3>Depends on</h3><p>M0.</p>
+  <h3>Risks</h3><p class="risk">Schema churn. Keep the core model small and add fields by migration, not by speculation.</p>
+</section>
+
+<!-- M2 -->
+<section class="card" id="m2">
+  <div class="head"><span class="n">M2</span><h2>Review loop</h2><span class="est">2-3 weeks</span></div>
+  <p class="goal">Make the system come back to you: schedule reviews, remind reliably, keep history.</p>
+  <h3>Deliverables</h3>
+  <ul class="check">
+    <li><span class="tag be">BE</span>DecisionReview (append-only) with all spec fields, plus assumption validation updates</li>
+    <li><span class="tag be">BE</span>Review schedules: time-based, event-based, and condition-based triggers; <code>next_due_at</code>, <code>last_completed_at</code>, <code>snoozed_until</code>; snooze never loses the original due date</li>
+    <li><span class="tag be">BE</span>Postgres-backed job queue and Go worker with leasing, retries, and backoff</li>
+    <li><span class="tag be">BE</span>Notifications: in-app and email; idempotent, deduplicated, retryable, auditable</li>
+    <li><span class="tag be">BE</span>Overdue handling: stays visible until completed or dismissed</li>
+    <li><span class="tag be">BE</span>Completing a review can schedule the next one</li>
+  </ul>
+  <h3>Exit criteria</h3>
+  <ul class="plain">
+    <li>Tests cover due dates, recurrence, snoozing, retries, and duplicate prevention (a crashed worker never double-notifies).</li>
+    <li>End-to-end via API: create decision, set review, worker fires notification, complete review, next review scheduled.</li>
+  </ul>
+  <h3>Depends on</h3><p>M1.</p>
+  <h3>Risks</h3><p class="risk">Duplicate notifications from worker restarts. Use unique idempotency keys per (schedule, due date) enforced in the database.</p>
+</section>
+
+<!-- M3 -->
+<section class="card" id="m3">
+  <div class="head"><span class="n">M3</span><h2>Auth + first web milestone</h2><span class="est">3-4 weeks</span></div>
+  <p class="goal">Deliver the spec's first milestone on the website: the full create-to-learn loop.</p>
+  <h3>Deliverables</h3>
+  <ul class="check">
+    <li><span class="tag be">BE</span>Single-user auth: hashed password, secure cookie sessions for web, short-lived access + refresh tokens for mobile, rate-limited login, TOTP as a second factor</li>
+    <li><span class="tag be">BE</span>Authorization on every endpoint; audit log of logins</li>
+    <li><span class="tag web">WEB</span>Angular + Tailwind app shell; primary navigation: Today, Decisions, Reviews, Timeline, Search</li>
+    <li><span class="tag web">WEB</span>Generated TypeScript API client from OpenAPI</li>
+    <li><span class="tag web">WEB</span>Today screen: reviews due, overdue, active decisions, upcoming, unresolved</li>
+    <li><span class="tag web">WEB</span>Fast decision capture form (under a minute) with assumptions and expected outcome</li>
+    <li><span class="tag web">WEB</span>Decision Replay view: why, knew, believed, felt, expected, what happened, reviews, what changed, related; original visually distinct from later reviews</li>
+    <li><span class="tag web">WEB</span>Review workflow: optional questions, expected vs actual, assumption verdicts, lesson, next review</li>
+  </ul>
+  <h3>Exit criteria</h3>
+  <ul class="plain">
+    <li>Manually complete the whole loop in the browser: capture, assumptions, expected outcome, review date, receive review, record actual outcome, lesson, next review, view history.</li>
+    <li>Angular unit tests for core components; API tests for auth flows.</li>
+  </ul>
+  <h3>Depends on</h3><p>M1, M2 (review endpoints can land during M3).</p>
+  <h3>Risks</h3><p class="risk">Auth mistakes are costly once the app is public. Prefer proven libraries and review the session and token design before M4.</p>
+</section>
+
+<!-- M4 -->
+<section class="card" id="m4">
+  <div class="head"><span class="n">M4</span><h2>Deploy: reachable anywhere</h2><span class="est">1 week</span></div>
+  <p class="goal">Put it on the internet safely so real use, and mobile development, can start.</p>
+  <h3>Deliverables</h3>
+  <ul class="check">
+    <li><span class="tag ops">OPS</span>VPS provisioned, firewall, SSH keys only, unattended security updates</li>
+    <li><span class="tag ops">OPS</span>Domain and DNS; Caddy reverse proxy with automatic TLS; HTTPS only</li>
+    <li><span class="tag ops">OPS</span>Production Docker Compose: API, worker, Postgres, MinIO, Caddy; secrets outside the repo</li>
+    <li><span class="tag ops">OPS</span>Encrypted nightly backups of Postgres and MinIO copied off the box</li>
+    <li><span class="tag ops">OPS</span>Deploy script or CI job; documented runbook in <code>deploy/</code></li>
+    <li><span class="tag ops">OPS</span>Uptime check on <code>/healthz</code></li>
+  </ul>
+  <h3>Exit criteria</h3>
+  <ul class="plain">
+    <li>Log in over HTTPS from a phone browser on mobile data.</li>
+    <li>A backup restore drill succeeds on a fresh machine.</li>
+  </ul>
+  <h3>Depends on</h3><p>M3.</p>
+  <h3>Risks</h3><p class="risk">Personal data on a public host. Do not load real data until backups are proven and login rate limiting is on. A single VPS is a single point of failure, so restore drills matter.</p>
+</section>
+
+<!-- M5 -->
+<section class="card" id="m5">
+  <div class="head"><span class="n">M5</span><h2>Flutter mobile app</h2><span class="est">4-5 weeks</span></div>
+  <p class="goal">Capture and review from your pocket, with the same data and rules as the web.</p>
+  <h3>Deliverables</h3>
+  <ul class="check">
+    <li><span class="tag mob">MOB</span>Flutter project, generated Dart API client from OpenAPI, state management, theming</li>
+    <li><span class="tag mob">MOB</span>Login with secure token storage (Keychain / Keystore) and refresh handling; biometric unlock</li>
+    <li><span class="tag mob">MOB</span>Today screen</li>
+    <li><span class="tag mob">MOB</span>Quick capture, under a minute; drafts saved locally; offline queue that syncs using idempotency keys</li>
+    <li><span class="tag mob">MOB</span>Decision detail (replay view) and review completion</li>
+    <li><span class="tag mob">MOB</span>Read cache so recent decisions open offline</li>
+    <li><span class="tag be">BE</span>Device registration and push delivery via FCM/APNs, added to the notification module with email fallback</li>
+    <li><span class="tag mob">MOB</span>Push tap deep-links to the review</li>
+    <li><span class="tag mob">MOB</span>Timeline and Search screens once M6 endpoints exist</li>
+    <li><span class="tag ops">OPS</span>Test builds via TestFlight and Play internal testing</li>
+  </ul>
+  <h3>Exit criteria</h3>
+  <ul class="plain">
+    <li>On a real device against the deployed API: capture a decision offline, sync it, receive a review push, complete the review.</li>
+    <li><code>flutter test</code> passes; CI builds both platforms.</li>
+  </ul>
+  <h3>Depends on</h3><p>M4 (deployed API), stable OpenAPI from M1-M3.</p>
+  <h3>Risks</h3><p class="risk">Apple developer account and push setup lead time; offline conflict handling (keep captures append-only to avoid conflicts); web and mobile drifting apart, so both stay thin over the API.</p>
+</section>
+
+<!-- M6 -->
+<section class="card" id="m6">
+  <div class="head"><span class="n">M6</span><h2>History: timeline, search, sources, files</h2><span class="est">3-4 weeks</span></div>
+  <p class="goal">Answer "how did I arrive at this?" and find anything, with provenance on every result.</p>
+  <h3>Deliverables</h3>
+  <ul class="check">
+    <li><span class="tag be">BE</span>Source model with content hash, external id, and permissions; provenance links from every record back to its source</li>
+    <li><span class="tag be">BE</span>File attachments through MinIO with signed URLs</li>
+    <li><span class="tag be">BE</span>Timeline endpoint (events, decisions, reviews, milestones) with filters: date, life area, type, entity, importance, status</li>
+    <li><span class="tag be">BE</span>Hybrid search: Postgres full-text plus pgvector plus structured filters; embeddings behind a provider interface with a local option</li>
+    <li><span class="tag be">BE</span>"How did I arrive here?" graph walk over relations</li>
+    <li><span class="tag web">WEB</span>Timeline, Search, Sources, Goals, and related-records panels</li>
+    <li><span class="tag mob">MOB</span>Timeline and Search on mobile</li>
+  </ul>
+  <h3>Exit criteria</h3>
+  <ul class="plain">
+    <li>A natural-language query finds a decision by meaning, and the result shows its source.</li>
+    <li>Filtering the timeline by decision type and date range returns correct results.</li>
+  </ul>
+  <h3>Depends on</h3><p>M1, M4.</p>
+  <h3>Risks</h3><p class="risk">Embedding provider lock-in. Store the model name with each embedding so vectors can be regenerated.</p>
+</section>
+
+<!-- M7 -->
+<section class="card" id="m7">
+  <div class="head"><span class="n">M7</span><h2>AI layer</h2><span class="est">3-4 weeks</span></div>
+  <p class="goal">Add four explicit AI capabilities. No autonomous agent, nothing canonical without confirmation.</p>
+  <h3>Deliverables</h3>
+  <ul class="check">
+    <li><span class="tag be">BE</span>Provider-agnostic AI interface; external providers disabled by default and enabled explicitly, with a clear statement of what data is sent</li>
+    <li><span class="tag be">BE</span><b>AI capture:</b> free text to a draft decision; unknown fields marked unknown; user confirms before a canonical record is created</li>
+    <li><span class="tag be">BE</span><b>AI retrieval:</b> natural-language questions with citations, labelling recorded fact, user statement, AI inference, unknown</li>
+    <li><span class="tag be">BE</span><b>AI review:</b> compare expected and observed outcome, surface discrepancies, ask questions; no personality analysis</li>
+    <li><span class="tag be">BE</span><b>Longitudinal analysis:</b> traceable statements such as "in 6 recorded decisions..."</li>
+    <li><span class="tag be">BE</span>AI-extracted fields flagged and never treated as canonical until confirmed</li>
+    <li><span class="tag web">WEB</span><span class="tag mob">MOB</span>Draft review screens, citation display, AI settings</li>
+  </ul>
+  <h3>Exit criteria</h3>
+  <ul class="plain">
+    <li>Tests cover structured extraction validation, unknown-field handling, provenance, and citation generation.</li>
+    <li>Turning AI off leaves every other feature working.</li>
+  </ul>
+  <h3>Depends on</h3><p>M6.</p>
+  <h3>Risks</h3><p class="risk">Hallucinated history. Validate every output against a schema, require citations, and reject answers that cite nothing.</p>
+</section>
+
+<!-- M8 -->
+<section class="card" id="m8">
+  <div class="head"><span class="n">M8</span><h2>Integrations</h2><span class="est">3-4 weeks</span></div>
+  <p class="goal">Feed more evidence in through one ingestion pipeline. Connectors hold no business logic.</p>
+  <h3>Deliverables</h3>
+  <ul class="check">
+    <li><span class="tag be">BE</span>Ingestion pipeline: raw source, normalize, deduplicate, extract, candidate record, human confirmation, canonical record, relations, search index, optional review schedule</li>
+    <li><span class="tag be">BE</span>Idempotency keys and content hashes</li>
+    <li><span class="tag be">BE</span>Wave 1: manual capture, Markdown import, file upload, voice capture, calendar</li>
+    <li><span class="tag be">BE</span>Wave 2: GitHub, Gmail/Outlook, browser extension</li>
+    <li><span class="tag web">WEB</span><span class="tag mob">MOB</span>Candidate inbox to confirm or reject extracted records</li>
+  </ul>
+  <h3>Exit criteria</h3>
+  <ul class="plain">
+    <li>Importing the same file twice creates one source.</li>
+    <li>Nothing enters canonical records without confirmation.</li>
+  </ul>
+  <h3>Depends on</h3><p>M6, ideally M7 for extraction.</p>
+  <h3>Risks</h3><p class="risk">OAuth scope creep and provider policy. Request read-only scopes; no always-on recording or ambient monitoring.</p>
+</section>
+
+<!-- M9 -->
+<section class="card" id="m9">
+  <div class="head"><span class="n">M9</span><h2>Hardening</h2><span class="est">2-3 weeks</span></div>
+  <p class="goal">Make it trustworthy for years of personal data.</p>
+  <h3>Deliverables</h3>
+  <ul class="check">
+    <li><span class="tag be">BE</span>Full export: JSON, Markdown, CSV, original attachments, relations and review history, readable without the app</li>
+    <li><span class="tag be">BE</span>Complete deletion of all data on request</li>
+    <li><span class="tag be">BE</span>Rate limiting, security headers, dependency scanning, secret rotation, encrypted backups verified</li>
+    <li><span class="tag ops">OPS</span>OpenTelemetry traces and metrics, structured logs without raw personal content, job monitoring and alerts</li>
+    <li><span class="tag ops">OPS</span>Scheduled restore drills; load test; security review</li>
+    <li><span class="tag web">WEB</span><span class="tag mob">MOB</span>Export and delete controls in Settings; accessibility pass</li>
+    <li><span class="tag mob">MOB</span>Store release: App Store and Play Store (or keep private distribution)</li>
+  </ul>
+  <h3>Exit criteria</h3>
+  <ul class="plain">
+    <li>Export, wipe, and re-import round-trips with no loss.</li>
+    <li>Definition of done from the spec (12 items) is met.</li>
+  </ul>
+  <h3>Depends on</h3><p>All prior milestones (start earlier items in parallel).</p>
+  <h3>Risks</h3><p class="risk">Leaving hardening to the end. Auth, backups, and log hygiene are already required in M3-M4; M9 is verification and depth.</p>
+</section>
+
+<section class="card">
+  <h2>Cross-cutting risks</h2>
+  <table>
+    <tr><th>Risk</th><th>Mitigation</th></tr>
+    <tr><td>Personal data exposed on a public server</td><td>TLS only, strong auth plus TOTP, rate limits, encrypted backups, minimal logging</td></tr>
+    <tr><td>Web and mobile drift</td><td>OpenAPI-generated clients, CI drift check, no business logic in clients</td></tr>
+    <tr><td>Single VPS failure</td><td>Off-box encrypted backups, documented and drilled restore</td></tr>
+    <tr><td>Scope creep into a general second brain</td><td>Every feature must strengthen the decision-review loop</td></tr>
+    <tr><td>AI provider dependence</td><td>Provider interface, AI off by default, local search mode</td></tr>
+    <tr><td>Push notification setup delays</td><td>Start Apple/Google accounts during M3; email fallback always on</td></tr>
+  </table>
+</section>
+
+</div>
+</body>
+</html>
