@@ -1,0 +1,57 @@
+# Secrets and local config
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Go
+/bin/
+/backend/bin/
+*.exe
+*.test
+*.out
+coverage.txt
+coverage.html
+go.work
+go.work.sum
+vendor/
+
+# Node / Angular
+node_modules/
+/frontend/dist/
+/frontend/.angular/
+/frontend/coverage/
+/frontend/out-tsc/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local data (personal content must never be committed)
+/data/
+/exports/
+/backups/
+/minio-data/
+/pgdata/
+*.dump
+*.sql.gz
+*.bak
+
+# Docker overrides
+docker-compose.override.yml
+
+# Logs and temp
+*.log
+tmp/
+.cache/
+
+# Editors / OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+.DS_Store
+Thumbs.db
+
+# Claude Code local settings
+.claude/settings.local.json
