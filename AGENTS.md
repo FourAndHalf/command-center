@@ -16,6 +16,8 @@ The full product spec is `docs/prompt.md`. Read it before making design decision
 
 No backend or web app yet — the repo contains the spec and milestone plan for those. `mobile/` is real: an offline-only Flutter app implementing the core decision/review/goal loop against a local Drift (SQLite) database, built ahead of the backend so there's something usable before a VPS exists. Its schema mirrors the eventual Postgres tables column-for-column (see `mobile/lib/data/tables.dart` for the mapping and the deliberate differences). Update this file as backend/web become real, and do not assume something exists without checking.
 
+The mobile app's visual design follows `design/DESIGN.md` (the "Executive Command Center" design system: colors, typography, spacing, and component tokens) and the mockups in `design/*.png`. `mobile/lib/app/design_tokens.dart` and `mobile/lib/app/theme.dart` implement it; reuse those tokens and the shared widgets in `mobile/lib/widgets/` rather than hard-coding colors or styles in a screen. When the web app is eventually built, it should follow the same system rather than inventing its own.
+
 ## Stack (fixed by the spec)
 
 - Backend: Go modular monolith, REST + OpenAPI. Modules: `decisions`, `reviews`, `events`, `sources`, `entities`, `goals`, `search`, `notifications`, `ingestion`, `ai`.
