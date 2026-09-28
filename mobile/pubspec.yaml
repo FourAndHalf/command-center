@@ -1,5 +1,5 @@
 name: mobile
-description: "Personal Command Center — offline-first mobile app."
+description: "Command Center — offline-first mobile app."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -41,6 +41,25 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   drift_dev: ^2.22.1
   build_runner: ^2.4.14
+  flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.4
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icon/splash_logo.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#3F51B5"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+
+flutter_native_splash:
+  color: "#3F51B5"
+  image: assets/icon/splash_logo.png
+  android_12:
+    color: "#3F51B5"
+    image: assets/icon/splash_logo.png

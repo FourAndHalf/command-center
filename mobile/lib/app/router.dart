@@ -14,11 +14,13 @@ import '../features/people/people_screen.dart';
 import '../features/insights/insights_screen.dart';
 import '../features/reflection/reflection_screen.dart';
 import '../features/settings/settings_screen.dart';
+import '../features/splash/splash_screen.dart';
 import 'app_shell.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/today',
+  initialLocation: '/splash',
   routes: [
+    GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
     ShellRoute(
       builder: (context, state, child) => AppShell(child: child),
       routes: [
