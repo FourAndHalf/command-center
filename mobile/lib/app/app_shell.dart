@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../data/database.dart';
 import 'providers.dart';
 
 /// Primary bottom navigation: Today · Decisions · Goals · Reviews · More.
@@ -72,10 +73,10 @@ class AppShell extends ConsumerWidget {
     );
   }
 
-  Stream<int> _dueAndOverdueCount(dynamic db) {
+  Stream<int> _dueAndOverdueCount(AppDatabase db) {
     return db.schedulesDao.watchDueToday().asyncMap((due) async {
       final overdue = await db.schedulesDao.watchOverdue().first;
-      return (due.length as int) + (overdue.length as int);
+      return due.length + overdue.length;
     });
   }
 
