@@ -255,6 +255,24 @@ other
 
 Allow custom tags.
 
+Decision status includes `pending` for decisions not yet made. A pending decision can have:
+
+```text
+decide_by
+open_questions (what I still need to find out)
+```
+
+Optional decision practices:
+
+```text
+risks        pre-mortem: "a year from now this failed; why?"
+             each risk may link to an assumption
+tripwires    "I will reconsider if..." conditions
+advice       who advised what (linked to a person entity) and when
+```
+
+Capture depth should scale with importance and reversibility. A reversible, low-importance decision needs only a quick capture. An irreversible, high-importance decision should invite the full form, a pre-mortem, and a check against principles. All of these fields stay optional.
+
 ---
 
 # 6. Assumptions Must Be First-Class
@@ -337,6 +355,8 @@ Never infer a psychological diagnosis.
 
 If AI detects emotional context from text, mark it as AI-extracted and require confirmation before treating it as canonical.
 
+For important decisions captured under strong emotion, offer an optional cool-off: a short revisit (for example, 48 hours) before committing. It is opt-in, it never blocks the decision, and it is recorded like any other review.
+
 ---
 
 # 8. Decision Review
@@ -374,7 +394,24 @@ The review workflow should ask:
 9. What should I continue, change, reverse, or stop?
 10. What did I learn that should influence future decisions?
 
+Additional optional review questions:
+
+11. How satisfied am I with this decision now? Do I regret anything? (recorded as a user statement, kept separate from outcome quality)
+12. What do I now think would have happened with the alternative I rejected?
+13. Did the pre-mortem risks happen?
+14. Did the advice I received hold up? (held up, did not, unclear)
+
+A lesson can be promoted to a principle (an open-ended goal), linked back to the reviews it came from.
+
 Do not force every review question to be answered.
+
+## Calibration and patterns
+
+Computed from records, without AI, and traceable to them:
+
+* **Prediction calibration.** Compare recorded confidence with how assumptions and expected outcomes turned out (for example, "of predictions made at 80% confidence, 5 of 9 held"). This measures predictions, never decision quality.
+* **Life-area counts.** How many decisions and linked goals fall in each decision type per period. Plain counts, no score.
+* **Past lessons at capture.** When capturing a decision, show lessons from similar recorded decisions (same type, tags, entities, or text), each linked to its review.
 
 ---
 
@@ -471,6 +508,10 @@ Do not automatically declare a decision inconsistent.
 Present the underlying evidence and let me decide what it means.
 
 When AI is enabled, active goals (except those marked `exclude_from_ai`) are given to the AI layer as context, so capture, retrieval, and review can relate decisions to goals. Goal links suggested by AI are AI inference and need confirmation. The data sent must be listed in AI settings.
+
+Principles can be derived from lessons and keep links to the reviews they came from.
+
+Support an optional quarterly and yearly reflection: a structured pass over goals, decisions made, reviews completed, and lessons for the period. The result is saved as an append-only reflection record. This is not free-form journaling.
 
 ---
 
@@ -589,6 +630,8 @@ review_schedule
 
 Support snoozing without losing the original due date.
 
+Tripwires are condition-based triggers. Cool-off revisits, `decide_by` reminders for pending decisions, goal check-ins, and periodic reflections all use the same scheduler.
+
 ---
 
 # 13. Notifications
@@ -668,7 +711,7 @@ Important decision reviews and relevant life events.
 
 ### Unresolved
 
-Questions or decisions that have not yet been closed.
+Questions or decisions that have not yet been closed, including pending decisions approaching their `decide_by` date, cool-off revisits, and reflections due.
 
 Keep this screen information-dense but simple.
 
