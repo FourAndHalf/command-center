@@ -16,37 +16,60 @@ class SearchScreen extends ConsumerStatefulWidget {
 }
 
 class _SearchScreenState extends ConsumerState<SearchScreen> {
-  final _controller = TextEditingController();
+  final _controller = SearchController();
   String _query = '';
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final db = ref.watch(databaseProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: TextField(
-          controller: _controller,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Search decisions, goals, events...',
-            border: InputBorder.none,
-          ),
-          onChanged: (v) => setState(() => _query = v.trim()),
+      appBar: AppBar(title: const Text('Search')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            SearchBar(
+              controller: _controller,
+              hintText: 'Search decisions, goals, events...',
+              leading: const Icon(Icons.search),
+              trailing: _query.isEmpty
+                  ? null
+                  : [
+                      IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _controller.clear();
+                          setState(() => _query = '');
+                        },
+                      ),
+                    ],
+              onChanged: (v) => setState(() => _query = v.trim()),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: _query.isEmpty
+                  ? const Center(child: Text('Type to search your history.'))
+                  : FutureBuilder<List<Widget>>(
+                      future: _search(db, _query),
+                      builder: (context, snapshot) {
+                        final results = snapshot.data ?? [];
+                        if (results.isEmpty) {
+                          return const Center(child: Text('No matches.'));
+                        }
+                        return ListView(children: results);
+                      },
+                    ),
+            ),
+          ],
         ),
       ),
-      body: _query.isEmpty
-          ? const Center(child: Text('Type to search your history.'))
-          : FutureBuilder<List<Widget>>(
-              future: _search(db, _query),
-              builder: (context, snapshot) {
-                final results = snapshot.data ?? [];
-                if (results.isEmpty) {
-                  return const Center(child: Text('No matches.'));
-                }
-                return ListView(children: results);
-              },
-            ),
     );
   }
 
@@ -74,28 +97,36 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     return [
       for (final d in decisions)
-        ListTile(
-          leading: const Icon(Icons.fact_check_outlined),
-          title: Text(d.title),
-          subtitle: const Text('Decision'),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.fact_check_outlined),
+            title: Text(d.title),
+            subtitle: const Text('Decision'),
+          ),
         ),
       for (final g in goals)
-        ListTile(
-          leading: const Icon(Icons.flag_outlined),
-          title: Text(g.title),
-          subtitle: const Text('Goal'),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.flag_outlined),
+            title: Text(g.title),
+            subtitle: const Text('Goal'),
+          ),
         ),
       for (final e in events)
-        ListTile(
-          leading: const Icon(Icons.event_outlined),
-          title: Text(e.title),
-          subtitle: const Text('Event'),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.event_outlined),
+            title: Text(e.title),
+            subtitle: const Text('Event'),
+          ),
         ),
       for (final r in reviews)
-        ListTile(
-          leading: const Icon(Icons.rate_review_outlined),
-          title: Text(r.lesson ?? r.whatActuallyHappened ?? ''),
-          subtitle: const Text('Review'),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.rate_review_outlined),
+            title: Text(r.lesson ?? r.whatActuallyHappened ?? ''),
+            subtitle: const Text('Review'),
+          ),
         ),
     ];
   }

@@ -35,16 +35,19 @@ class GoalDetailScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  for (final s in ['active', 'paused', 'achieved', 'abandoned'])
-                    if (s != goal.status)
-                      OutlinedButton(
-                        onPressed: () => _changeStatus(db, goal, s),
-                        child: Text('Mark $s'),
-                      ),
-                ],
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(value: 'active', label: Text('Active')),
+                    ButtonSegment(value: 'paused', label: Text('Paused')),
+                    ButtonSegment(value: 'achieved', label: Text('Achieved')),
+                    ButtonSegment(value: 'abandoned', label: Text('Abandoned')),
+                  ],
+                  selected: {goal.status},
+                  onSelectionChanged: (selection) =>
+                      _changeStatus(db, goal, selection.first),
+                ),
               ),
               const SizedBox(height: 16),
               Text('Check-ins', style: Theme.of(context).textTheme.titleSmall),
