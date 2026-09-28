@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
+
 /// Startup animation: the logo pops out from the center (a quick
 /// overshoot scale-in), holds briefly, then the whole thing fades away
 /// into the app. Runs once per cold start, right after the native splash
@@ -73,10 +75,12 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
-      backgroundColor: colorScheme.primary,
+      // The app icon and this splash sit on the same deep-zinc canvas
+      // (design/DESIGN.md); colorScheme.primary is a light "on-dark-surface"
+      // role in this design system, not a background, so using it here
+      // washed the logo out to near-white.
+      backgroundColor: AppColors.canvas,
       body: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
@@ -100,11 +104,7 @@ class _SplashScreenState extends State<SplashScreen>
             const SizedBox(height: 20),
             Text(
               'Command Center',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
+              style: AppTypography.headlineMd.copyWith(color: AppColors.onSurface),
             ),
           ],
         ),
