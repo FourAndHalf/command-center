@@ -14,7 +14,7 @@ The full product spec is `docs/prompt.md`. Read it before making design decision
 
 ## Status
 
-Greenfield. As of now the repo contains only the spec. The layout and commands below are the planned ones; update this file as they become real, and do not assume something exists without checking.
+No backend or web app yet — the repo contains the spec and milestone plan for those. `mobile/` is real: an offline-only Flutter app implementing the core decision/review/goal loop against a local Drift (SQLite) database, built ahead of the backend so there's something usable before a VPS exists. Its schema mirrors the eventual Postgres tables column-for-column (see `mobile/lib/data/tables.dart` for the mapping and the deliberate differences). Update this file as backend/web become real, and do not assume something exists without checking.
 
 ## Stack (fixed by the spec)
 
@@ -76,4 +76,11 @@ Single repo by design; the OpenAPI spec in `backend/` is the contract for the ge
 
 ## Commands
 
-None established yet. Add build, test, lint, migrate, and run commands here when the toolchain is set up.
+Backend/web: none established yet.
+
+Mobile (`mobile/`):
+- `flutter pub get` — install dependencies
+- `dart run build_runner build --delete-conflicting-outputs` — regenerate Drift/DAO code after changing `lib/data/tables.dart` or a DAO
+- `flutter analyze` — lint
+- `flutter test` — run tests (`test/database_test.dart` covers versioning, append-only reviews, snooze behavior)
+- `flutter run` — run on a connected device/emulator
