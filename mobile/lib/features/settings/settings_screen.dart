@@ -42,7 +42,7 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
           const AboutListTile(
             icon: Icon(Icons.info_outline),
-            applicationName: 'Personal Command Center',
+            applicationName: 'Command Center',
             applicationVersion: '0.1.0 (offline mobile)',
           ),
         ],

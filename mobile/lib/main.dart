@@ -13,7 +13,7 @@ class CommandCenterApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Personal Command Center',
+      title: 'Command Center',
       theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
       darkTheme: ThemeData(
         colorSchemeSeed: Colors.indigo,
