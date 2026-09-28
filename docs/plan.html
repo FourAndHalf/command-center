@@ -140,7 +140,8 @@ docs/       spec, design docs, this plan</pre>
     <li><span class="tag be">BE</span>Migrations: decisions, decision_versions, assumptions, events, entities, relations, goals, goal_versions, audit_log (UUID keys, foreign keys, indexes; JSONB only where flexible)</li>
     <li><span class="tag be">BE</span>Decision CRUD with all spec fields: context, objective, alternatives, constraints, assumptions, emotional context, expected outcome, success and failure criteria, confidence, importance, reversibility, tags</li>
     <li><span class="tag be">BE</span>Immutable versioning: any material edit writes a new version, v1 is never destroyed</li>
-    <li><span class="tag be">BE</span>Relations: supersedes, modifies, reverses, depends_on, influenced_by, resulted_in, contradicts, supports; decision-to-goal links</li>
+    <li><span class="tag be">BE</span>Relations: supersedes, modifies, reverses, depends_on, influenced_by, resulted_in, contradicts, supports, derived_from (principle from lesson); decision-to-goal links</li>
+    <li><span class="tag be">BE</span>Decision practices: <code>pending</code> status with decide_by and open questions; pre-mortem risks (optionally linked to assumptions); tripwires; advice entries linked to person entities</li>
     <li><span class="tag be">BE</span>Goal CRUD: horizons (this month, this quarter, 1/3/5/10 years, open-ended), optional parent goal, target date, status history; edits write a goal version</li>
     <li><span class="tag be">BE</span>Events and entities CRUD</li>
     <li><span class="tag be">BE</span>Audit log entries on every write</li>
@@ -152,6 +153,7 @@ docs/       spec, design docs, this plan</pre>
     <li>Tests pass for decision creation, versioning (v1 preserved), and relations.</li>
     <li>Editing a goal keeps its prior version; a status change is recorded with date and note.</li>
     <li>Seed data loads and the API returns a full decision with assumptions and relations.</li>
+    <li>A pending decision with risks, tripwires, and advice round-trips through the API.</li>
   </ul>
   <h3>Depends on</h3><p>M0.</p>
   <h3>Risks</h3><p class="risk">Schema churn. Keep the core model small and add fields by migration, not by speculation.</p>
@@ -169,12 +171,15 @@ docs/       spec, design docs, this plan</pre>
     <li><span class="tag be">BE</span>Notifications: in-app and email; idempotent, deduplicated, retryable, auditable</li>
     <li><span class="tag be">BE</span>Overdue handling: stays visible until completed or dismissed</li>
     <li><span class="tag be">BE</span>Completing a review can schedule the next one</li>
+    <li><span class="tag be">BE</span>Review fields: satisfaction and regret (user statement), road not taken, pre-mortem risk outcomes, advice held up / did not / unclear</li>
+    <li><span class="tag be">BE</span>More triggers on the same scheduler: tripwires (condition-based), cool-off revisits, decide_by reminders, quarterly and yearly reflections (append-only reflection records)</li>
     <li><span class="tag be">BE</span>Goal check-ins: optional schedule reusing ReviewSchedule (for example, at quarter end for a quarterly goal); check-ins are append-only</li>
   </ul>
   <h3>Exit criteria</h3>
   <ul class="plain">
     <li>Tests cover due dates, recurrence, snoozing, retries, and duplicate prevention (a crashed worker never double-notifies).</li>
     <li>End-to-end via API: create decision, set review, worker fires notification, complete review, next review scheduled.</li>
+    <li>A tripwire and a reflection schedule each fire exactly once, with no duplicates after a worker restart.</li>
   </ul>
   <h3>Depends on</h3><p>M1.</p>
   <h3>Risks</h3><p class="risk">Duplicate notifications from worker restarts. Use unique idempotency keys per (schedule, due date) enforced in the database.</p>
@@ -196,6 +201,8 @@ docs/       spec, design docs, this plan</pre>
     <li><span class="tag web">WEB</span>Review workflow: optional questions, expected vs actual, assumption verdicts, lesson, next review</li>
     <li><span class="tag web">WEB</span>Goals screen (secondary nav): list by horizon, create and edit, status change, parent goal; goal picker on the capture form; linked goals in the replay view</li>
     <li><span class="tag web">WEB</span>Today shows active short-term goals and goal check-ins due</li>
+    <li><span class="tag web">WEB</span>Capture depth by importance and reversibility: quick form by default, full form with pre-mortem, tripwires, advice, and principles check for irreversible, high-importance decisions; optional cool-off revisit</li>
+    <li><span class="tag web">WEB</span>Pending decisions on Today with decide_by; review workflow adds satisfaction/regret, road not taken, risk and advice outcomes; promote a lesson to a principle</li>
   </ul>
   <h3>Exit criteria</h3>
   <ul class="plain">
@@ -203,7 +210,7 @@ docs/       spec, design docs, this plan</pre>
     <li>Angular unit tests for core components; API tests for auth flows.</li>
   </ul>
   <h3>Depends on</h3><p>M1, M2 (review endpoints can land during M3).</p>
-  <h3>Risks</h3><p class="risk">Auth mistakes are costly once the app is public. Prefer proven libraries and review the session and token design before M4.</p>
+  <h3>Risks</h3><p class="risk">Auth mistakes are costly once the app is public. Prefer proven libraries and review the session and token design before M4. Feature creep in capture: all new fields optional; quick capture stays under a minute.</p>
 </section>
 
 <!-- M4 -->
@@ -241,6 +248,7 @@ docs/       spec, design docs, this plan</pre>
     <li><span class="tag mob">MOB</span>Decision detail (replay view) and review completion</li>
     <li><span class="tag mob">MOB</span>Read cache so recent decisions open offline</li>
     <li><span class="tag mob">MOB</span>Goals list (read-only) and goal picker in quick capture</li>
+    <li><span class="tag mob">MOB</span>Pending decisions on Today; past-lesson hints in capture once M6 lands</li>
     <li><span class="tag be">BE</span>Device registration and push delivery via FCM/APNs, added to the notification module with email fallback</li>
     <li><span class="tag mob">MOB</span>Push tap deep-links to the review</li>
     <li><span class="tag mob">MOB</span>Timeline and Search screens once M6 endpoints exist</li>
@@ -267,12 +275,16 @@ docs/       spec, design docs, this plan</pre>
     <li><span class="tag be">BE</span>Hybrid search over decisions, reviews, events, and goals: Postgres full-text plus pgvector plus structured filters; embeddings behind a provider interface with a local option</li>
     <li><span class="tag be">BE</span>"How did I arrive here?" graph walk over relations</li>
     <li><span class="tag web">WEB</span>Timeline, Search, Sources, and related-records panels</li>
+    <li><span class="tag be">BE</span>Past lessons at capture: lessons from similar recorded decisions (type, tags, entities, full text), each cited</li>
+    <li><span class="tag be">BE</span>Prediction calibration (confidence vs. how assumptions and expected outcomes held) and life-area counts; computed without AI, never a decision score</li>
+    <li><span class="tag web">WEB</span>Reviews screen tabs: Reflection (quarterly/yearly walk-through), Calibration, Life areas; advice history per person</li>
     <li><span class="tag mob">MOB</span>Timeline and Search on mobile</li>
   </ul>
   <h3>Exit criteria</h3>
   <ul class="plain">
     <li>A natural-language query finds a decision by meaning, and the result shows its source.</li>
     <li>Filtering the timeline by decision type and date range returns correct results.</li>
+    <li>Calibration and life-area views match numbers computed by hand from seed data.</li>
   </ul>
   <h3>Depends on</h3><p>M1, M4.</p>
   <h3>Risks</h3><p class="risk">Embedding provider lock-in. Store the model name with each embedding so vectors can be regenerated.</p>
@@ -289,6 +301,7 @@ docs/       spec, design docs, this plan</pre>
     <li><span class="tag be">BE</span><b>AI retrieval:</b> natural-language questions with citations, labelling recorded fact, user statement, AI inference, unknown</li>
     <li><span class="tag be">BE</span><b>AI review:</b> compare expected and observed outcome, surface discrepancies, ask questions; no personality analysis</li>
     <li><span class="tag be">BE</span><b>Longitudinal analysis:</b> traceable statements such as "in 6 recorded decisions..."</li>
+    <li><span class="tag be">BE</span>Semantic matching for past lessons at capture, still cited and labelled</li>
     <li><span class="tag be">BE</span>Goal context: when AI is on, active goals not marked "exclude from AI" go into every AI call as a compact block with IDs; AI-suggested goal links (supports, conflicts) are cited and labelled AI inference until confirmed</li>
     <li><span class="tag be">BE</span>AI-extracted fields flagged and never treated as canonical until confirmed</li>
     <li><span class="tag web">WEB</span><span class="tag mob">MOB</span>Draft review screens, citation display, AI settings (lists what is sent, including goals; per-goal exclude)</li>
