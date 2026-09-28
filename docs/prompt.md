@@ -430,11 +430,32 @@ A goal may represent:
 Goals can have time horizons:
 
 ```text
+this month
+this quarter
 1 year
 3 years
 5 years
 10 years
+open-ended (principles and values)
 ```
+
+A goal should contain:
+
+```text
+Goal
+- id
+- title
+- why
+- horizon
+- target_date (optional)
+- parent_goal_id (optional; a short-term goal can serve a long-term one)
+- status (active, paused, achieved, abandoned)
+- exclude_from_ai
+```
+
+Goals follow the same history rule as decisions. Edits create a goal version; status changes are recorded with a date and a note. Nothing is overwritten.
+
+Goals can have optional check-ins (for example, at the end of a quarter). Check-ins are append-only, like reviews.
 
 Allow decisions to reference goals.
 
@@ -448,6 +469,8 @@ Decision C conflicts with Goal B
 Do not automatically declare a decision inconsistent.
 
 Present the underlying evidence and let me decide what it means.
+
+When AI is enabled, active goals (except those marked `exclude_from_ai`) are given to the AI layer as context, so capture, retrieval, and review can relate decisions to goals. Goal links suggested by AI are AI inference and need confirmation. The data sent must be listed in AI settings.
 
 ---
 
