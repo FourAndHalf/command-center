@@ -21,6 +21,7 @@ Greenfield. As of now the repo contains only the spec. The layout and commands b
 - Backend: Go modular monolith, REST + OpenAPI. Modules: `decisions`, `reviews`, `events`, `sources`, `entities`, `goals`, `search`, `notifications`, `ingestion`, `ai`.
 - Database: PostgreSQL only (system of record), pgvector, Postgres full-text search. UUID PKs, foreign keys, migrations, JSONB only where flexibility helps.
 - Frontend: Angular, TypeScript, Tailwind CSS, Angular CDK.
+- Mobile: Flutter.
 - Files: S3-compatible storage (MinIO in dev).
 - Background jobs: Go worker with PostgreSQL-backed job state.
 
@@ -30,9 +31,13 @@ Do not introduce microservices, Kubernetes, Neo4j, Kafka, Temporal, Elasticsearc
 
 ```
 backend/    Go service, worker, migrations, OpenAPI spec
-frontend/   Angular app
-docs/       Spec and design docs
+web/        Angular app
+mobile/     Flutter app
+deploy/     docker-compose, Caddyfile, backup scripts
+docs/       Spec, design docs, milestone plan
 ```
+
+Single repo by design; the OpenAPI spec in `backend/` is the contract for the generated web and mobile clients.
 
 ## Domain invariants (do not violate)
 
