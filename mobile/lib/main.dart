@@ -13,10 +13,14 @@ class CommandCenterApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The "Executive Command Center" design system (design/DESIGN.md) is a
+    // single deliberately dark palette, not a light/dark pair, so the app
+    // always renders in it regardless of the device's system theme.
     return MaterialApp.router(
       title: 'Command Center',
-      theme: buildLightTheme(),
-      darkTheme: buildDarkTheme(),
+      theme: buildAppTheme(),
+      darkTheme: buildAppTheme(),
+      themeMode: ThemeMode.dark,
       routerConfig: appRouter,
     );
   }

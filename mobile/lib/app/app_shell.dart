@@ -44,9 +44,12 @@ class AppShell extends ConsumerWidget {
               context.go(_tabs[index]);
             },
             destinations: [
-              const NavigationDestination(icon: Icon(Icons.today), label: 'Today'),
               const NavigationDestination(
-                icon: Icon(Icons.fact_check_outlined),
+                icon: Icon(Icons.grid_view_outlined),
+                label: 'Today',
+              ),
+              const NavigationDestination(
+                icon: Icon(Icons.balance_outlined),
                 label: 'Decisions',
               ),
               const NavigationDestination(
@@ -57,7 +60,7 @@ class AppShell extends ConsumerWidget {
                 icon: Badge(
                   isLabelVisible: count > 0,
                   label: Text('$count'),
-                  child: const Icon(Icons.rate_review_outlined),
+                  child: const Icon(Icons.checklist_outlined),
                 ),
                 label: 'Reviews',
               ),
