@@ -1,7 +1,11 @@
+import 'package:drift/drift.dart' show BooleanExpressionOperators, StringExpressionOperators;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
 import '../../app/providers.dart';
+import '../../data/database.dart';
 
 /// Simple LIKE-based search across decisions, goals, and events. Every
 /// result shows which record it came from (docs/prompt.md §18 provenance).
@@ -57,8 +61,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               child: _query.isEmpty
                   ? const Center(child: Text('Type to search your history.'))
                   : FutureBuilder<List<Widget>>(
-                      future: _search(db, _query),
+                      future: _search(context, db, _query),
                       builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Center(child: Text('Search failed: ${snapshot.error}'));
+                        }
                         final results = snapshot.data ?? [];
                         if (results.isEmpty) {
                           return const Center(child: Text('No matches.'));
@@ -73,7 +80,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  Future<List<Widget>> _search(dynamic db, String query) async {
+  Future<List<Widget>> _search(BuildContext context, AppDatabase db, String query) async {
     final pattern = '%$query%';
 
     final decisions = await (db.select(db.decisions)
@@ -102,6 +109,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             leading: const Icon(Icons.fact_check_outlined),
             title: Text(d.title),
             subtitle: const Text('Decision'),
+            onTap: () => context.push('/decisions/${d.id}'),
           ),
         ),
       for (final g in goals)
@@ -110,6 +118,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             leading: const Icon(Icons.flag_outlined),
             title: Text(g.title),
             subtitle: const Text('Goal'),
+            onTap: () => context.push('/goals/${g.id}'),
           ),
         ),
       for (final e in events)
@@ -126,6 +135,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             leading: const Icon(Icons.rate_review_outlined),
             title: Text(r.lesson ?? r.whatActuallyHappened ?? ''),
             subtitle: const Text('Review'),
+            onTap: () => context.push('/decisions/${r.decisionId}'),
           ),
         ),
     ];
