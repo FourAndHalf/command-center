@@ -62,7 +62,7 @@ class ReviewsScreen extends ConsumerWidget {
                                   accent: overdue.isNotEmpty ? AppColors.tripwireAmber : null,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppSpacing.sm),
                               Expanded(
                                 child: StatTile(
                                   label: 'Due this week',
@@ -70,7 +70,11 @@ class ReviewsScreen extends ConsumerWidget {
                                   sublabel: 'Pending',
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Row(
+                            children: [
                               Expanded(
                                 child: StatTile(
                                   label: 'Next 30 days',
@@ -78,7 +82,7 @@ class ReviewsScreen extends ConsumerWidget {
                                   sublabel: 'Scheduled',
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppSpacing.sm),
                               Expanded(
                                 child: StatTile(
                                   label: 'Completed',

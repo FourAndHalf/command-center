@@ -55,4 +55,6 @@ class GoalsDao extends DatabaseAccessor<AppDatabase> with _$GoalsDaoMixin {
   /// Check-ins are append-only, like reviews.
   Future<void> insertCheckin(Insertable<GoalCheckin> checkin) =>
       into(goalCheckins).insert(checkin);
+
+  Stream<List<GoalCheckin>> watchAllCheckins() => select(goalCheckins).watch();
 }
