@@ -97,17 +97,7 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           );
         },
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset('assets/icon/splash_logo.png', width: 160, height: 160),
-            const SizedBox(height: 20),
-            Text(
-              'Command Center',
-              style: AppTypography.headlineMd.copyWith(color: AppColors.onSurface),
-            ),
-          ],
-        ),
+        child: Image.asset('assets/icon/splash_logo.png', width: 160, height: 160),
       ),
     );
   }
