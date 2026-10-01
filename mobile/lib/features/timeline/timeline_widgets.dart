@@ -90,17 +90,28 @@ class _SpinePainter extends CustomPainter {
       old.color != color || old.stub != stub;
 }
 
-class _TimelineCard extends StatelessWidget {
+class _TimelineCard extends StatefulWidget {
   const _TimelineCard({required this.entry});
 
   final TimelineEntry entry;
 
   @override
+  State<_TimelineCard> createState() => _TimelineCardState();
+}
+
+class _TimelineCardState extends State<_TimelineCard> {
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
+    final entry = widget.entry;
     // Anchors (decisions/reviews/goals) read stronger than the signals
     // around them, so the original decision stays the visual focus.
     final isAnchor = entry.side == TimelineSide.left;
     final route = entry.route;
+    // Anchors open their detail screen; signals expand in place to show the
+    // full entry (with a link through to the parent record, if any).
+    final expanded = !isAnchor && _expanded;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -116,7 +127,9 @@ class _TimelineCard extends StatelessWidget {
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: route == null ? null : () => context.push(route),
+          onTap: isAnchor
+              ? (route == null ? null : () => context.push(route))
+              : () => setState(() => _expanded = !_expanded),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.sm + 4),
             child: Column(
@@ -137,8 +150,8 @@ class _TimelineCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   entry.title,
-                  maxLines: isAnchor ? 3 : 2,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: isAnchor ? 3 : (expanded ? null : 2),
+                  overflow: expanded ? null : TextOverflow.ellipsis,
                   style: isAnchor
                       ? AppTypography.headlineMd.copyWith(fontSize: 15)
                       : AppTypography.bodySm,
@@ -147,8 +160,8 @@ class _TimelineCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     entry.subtitle!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    maxLines: expanded ? null : 2,
+                    overflow: expanded ? null : TextOverflow.ellipsis,
                     style: AppTypography.bodySm.copyWith(
                       fontSize: 12,
                       color: AppColors.onSurfaceVariant,
@@ -159,11 +172,24 @@ class _TimelineCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     '↳ ${entry.parent}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    maxLines: expanded ? null : 1,
+                    overflow: expanded ? null : TextOverflow.ellipsis,
                     style: AppTypography.labelCaps.copyWith(
                       fontSize: 10,
                       color: AppColors.outline,
+                    ),
+                  ),
+                ],
+                if (expanded && route != null) ...[
+                  const SizedBox(height: 6),
+                  GestureDetector(
+                    onTap: () => context.push(route),
+                    child: Text(
+                      'OPEN RECORD →',
+                      style: AppTypography.labelCaps.copyWith(
+                        fontSize: 10,
+                        color: AppColors.calibrationIndigo,
+                      ),
                     ),
                   ),
                 ],

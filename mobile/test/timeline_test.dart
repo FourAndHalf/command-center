@@ -77,6 +77,12 @@ void main() {
     expect(find.text('Market shrinks'), findsOneWidget);
     expect(find.text('Start smaller'), findsNothing);
 
+    // Tapping a signal expands it in place and offers a link to the record.
+    expect(find.text('OPEN RECORD →'), findsNothing);
+    await tester.tap(find.text('Market shrinks'));
+    await tester.pump();
+    expect(find.text('OPEN RECORD →'), findsOneWidget);
+
     // Unmount so drift's stream-cancel timers fire before the test ends.
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(milliseconds: 1));
