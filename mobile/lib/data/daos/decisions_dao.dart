@@ -81,4 +81,9 @@ class DecisionsDao extends DatabaseAccessor<AppDatabase> with _$DecisionsDaoMixi
   Future<void> setAdviceHeldUp(String adviceId, String heldUp) =>
       (update(decisionAdvice)..where((a) => a.id.equals(adviceId)))
           .write(DecisionAdviceCompanion(heldUp: Value(heldUp)));
+
+  Stream<List<DecisionRisk>> watchAllRisks() => select(decisionRisks).watch();
+
+  Stream<List<DecisionAdviceData>> watchAllAdvice() =>
+      select(decisionAdvice).watch();
 }

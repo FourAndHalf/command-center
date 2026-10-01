@@ -7,6 +7,7 @@ import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../data/database.dart';
 import '../../widgets/command_header.dart';
+import '../../widgets/stat_tile.dart';
 import '../../widgets/status_badge.dart';
 
 enum _Filter { all, active, pending, underReview }
@@ -59,6 +60,39 @@ class _DecisionsListScreenState extends ConsumerState<DecisionsListScreen> {
                   return ListView(
                     padding: const EdgeInsets.all(AppSpacing.marginMobile),
                     children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: StatTile(
+                              label: 'Active',
+                              value: '${all.where((d) => d.status == 'active').length}'
+                                  .padLeft(2, '0'),
+                              sublabel: 'In flight',
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: StatTile(
+                              label: 'Pending',
+                              value: '${all.where((d) => d.status == 'pending').length}'
+                                  .padLeft(2, '0'),
+                              sublabel: 'Undecided',
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: StatTile(
+                              label: 'Review due',
+                              value: '${underReviewIds.length}'.padLeft(2, '0'),
+                              sublabel: 'Under review',
+                              accent: underReviewIds.isNotEmpty
+                                  ? AppColors.tripwireAmber
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
                       _filterChips(all, underReviewIds),
                       const SizedBox(height: AppSpacing.md),
                       if (filtered.isEmpty)

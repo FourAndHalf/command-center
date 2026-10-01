@@ -19,4 +19,6 @@ class ReviewsDao extends DatabaseAccessor<AppDatabase> with _$ReviewsDaoMixin {
   /// ever inserts. There is no update/delete method for reviews by design.
   Future<void> insertReview(Insertable<DecisionReview> review) =>
       into(decisionReviews).insert(review);
+
+  Stream<List<DecisionReview>> watchAll() => select(decisionReviews).watch();
 }
