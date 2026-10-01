@@ -5,7 +5,9 @@ import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart' show Value;
 
 import '../../app/providers.dart';
+import '../../app/design_tokens.dart';
 import '../../data/database.dart';
+import '../../widgets/status_badge.dart';
 
 /// "Decision Replay" (docs/prompt.md §16): why / what I knew / believed /
 /// felt / expected / what happened / reviews / related — the original
@@ -88,15 +90,48 @@ class DecisionDetailScreen extends ConsumerWidget {
         return _section(
           context,
           'WHAT I BELIEVED (assumptions)',
-          items
-              .map((a) => ListTile(
-                    dense: true,
-                    title: Text(a.statement),
-                    subtitle: Text('${a.confidence ?? '?'}% · ${a.validationStatus}'),
-                  ))
-              .toList(),
+          items.map(_assumptionCard).toList(),
         );
       },
+    );
+  }
+
+  Widget _assumptionCard(Assumption a) {
+    final tone = switch (a.validationStatus) {
+      'validated' => BadgeTone.resolved,
+      'invalidated' => BadgeTone.tripwire,
+      _ => BadgeTone.neutral,
+    };
+    return Container(
+      margin: const EdgeInsets.only(top: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.sm + 4),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(a.statement, style: AppTypography.bodySm.copyWith(fontSize: 14)),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              StatusBadge(a.validationStatus, tone: tone),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                a.confidence == null
+                    ? 'Confidence not set'
+                    : '${a.confidence}% confident',
+                style: AppTypography.monoMetric.copyWith(
+                  fontSize: 12,
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
