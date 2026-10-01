@@ -25,44 +25,78 @@ class StatTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final valueColor = accent ?? AppColors.onSurface;
 
+    // Fixed height + single-line text keeps every tile in a row identical
+    // regardless of label length or whether it has an icon.
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      height: 104,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: AppColors.outlineVariant),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  label.toUpperCase(),
-                  style: AppTypography.labelCaps.copyWith(
-                    color: accent ?? AppColors.outline,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
+          // Thin top rule gives each tile a defined edge.
+          Container(height: 2, color: accent ?? AppColors.outlineVariant),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md - 4,
+                vertical: AppSpacing.sm + 2,
               ),
-              if (trailingIcon != null)
-                Icon(trailingIcon, size: 14, color: accent ?? AppColors.outline),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: AppTypography.headlineLg.copyWith(color: valueColor, fontSize: 26),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            sublabel.toUpperCase(),
-            style: AppTypography.labelCaps.copyWith(color: AppColors.outline),
+              child: _content(valueColor),
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _content(Color valueColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                label.toUpperCase(),
+                style: AppTypography.labelCaps.copyWith(
+                  color: accent ?? AppColors.outline,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: trailingIcon == null
+                  ? null
+                  : Icon(
+                      trailingIcon,
+                      size: 14,
+                      color: accent ?? AppColors.outline,
+                    ),
+            ),
+          ],
+        ),
+        Text(
+          value,
+          style: AppTypography.headlineLg.copyWith(
+            color: valueColor,
+            fontSize: 28,
+          ),
+        ),
+        Text(
+          sublabel.toUpperCase(),
+          style: AppTypography.labelCaps.copyWith(color: AppColors.outline),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
     );
   }
 }
