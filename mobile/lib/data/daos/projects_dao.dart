@@ -77,6 +77,44 @@ class ProjectsDao extends DatabaseAccessor<AppDatabase>
             ..where((e) => e.id.equals(projectId) & e.type.equals('project')))
           .getSingleOrNull();
 
+  /// Permanently removes a project and all records owned by it.
+  ///
+  /// Linked decisions and reviews remain intact; only the project citations
+  /// and polymorphic project relations are removed.
+  Future<void> deleteProject(String projectId) async {
+    await transaction(() async {
+      await _requireProject(projectId);
+      final entries = await (select(
+        projectEntries,
+      )..where((entry) => entry.projectEntityId.equals(projectId))).get();
+      final entryIds = entries.map((entry) => entry.id).toList();
+
+      if (entryIds.isNotEmpty) {
+        await (delete(
+          projectReviewEntries,
+        )..where((link) => link.entryId.isIn(entryIds))).go();
+        await (delete(
+          projectEntryEvidence,
+        )..where((evidence) => evidence.entryId.isIn(entryIds))).go();
+        await (delete(
+          projectEntries,
+        )..where((entry) => entry.id.isIn(entryIds))).go();
+      }
+
+      await (delete(relations)..where(
+            (relation) =>
+                (relation.sourceType.equals('entity') &
+                    relation.sourceId.equals(projectId)) |
+                (relation.targetType.equals('entity') &
+                    relation.targetId.equals(projectId)),
+          ))
+          .go();
+      await (delete(
+        entities,
+      )..where((entity) => entity.id.equals(projectId))).go();
+    });
+  }
+
   Stream<List<ProjectEntry>> watchHistory(String projectId) =>
       (select(projectEntries)
             ..where((e) => e.projectEntityId.equals(projectId))
@@ -516,6 +554,15 @@ class ProjectMilestone {
   final String label;
   final String? description;
   final int ordinal;
+
+  factory ProjectMilestone.fromJson(Map<String, dynamic> json) {
+    return ProjectMilestone(
+      key: json['key'] as String? ?? '',
+      label: json['label'] as String? ?? 'Untitled step',
+      description: json['description'] as String?,
+      ordinal: (json['ordinal'] as num?)?.toInt() ?? 0,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'key': key,

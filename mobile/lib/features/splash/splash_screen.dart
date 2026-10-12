@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/design_tokens.dart';
+import '../../widgets/command_center_mark.dart';
 
 /// Startup animation: the logo pops out from the center (a quick
 /// overshoot scale-in), holds briefly, then the whole thing fades away
@@ -35,18 +36,20 @@ class _SplashScreenState extends State<SplashScreen>
 
     _scale = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween(begin: 0.0, end: 1.15)
-            .chain(CurveTween(curve: Curves.easeOutBack)),
+        tween: Tween(
+          begin: 0.0,
+          end: 1.15,
+        ).chain(CurveTween(curve: Curves.easeOutBack)),
         weight: _popEnd,
       ),
       TweenSequenceItem(
-        tween: Tween(begin: 1.15, end: 1.0).chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween(
+          begin: 1.15,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeOut)),
         weight: _holdEnd - _popEnd,
       ),
-      TweenSequenceItem(
-        tween: ConstantTween(1.0),
-        weight: 1 - _holdEnd,
-      ),
+      TweenSequenceItem(tween: ConstantTween(1.0), weight: 1 - _holdEnd),
     ]).animate(_controller);
 
     _logoOpacity = CurvedAnimation(
@@ -85,15 +88,20 @@ class _SplashScreenState extends State<SplashScreen>
             child: Center(
               child: Opacity(
                 opacity: _logoOpacity.value,
-                child: Transform.scale(
-                  scale: _scale.value,
-                  child: child,
-                ),
+                child: Transform.scale(scale: _scale.value, child: child),
               ),
             ),
           );
         },
-        child: Image.asset('assets/icon/splash_logo.png', width: 160, height: 160),
+        child: Semantics(
+          label: 'Command Center',
+          image: true,
+          child: CommandCenterMark(
+            size: 160,
+            markScale: 0.42,
+            backgroundColor: Colors.transparent,
+          ),
+        ),
       ),
     );
   }

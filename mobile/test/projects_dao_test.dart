@@ -97,6 +97,44 @@ void main() {
     );
   });
 
+  test('deleting a project removes its owned data and links', () async {
+    final project = await db.projectsDao.createProject(name: 'Delete me');
+    final entry = await db.projectsDao.recordObservation(
+      projectId: project,
+      observedResult: 'Temporary result',
+      evidence: 'Temporary evidence',
+    );
+    await db
+        .into(db.relations)
+        .insert(
+          RelationsCompanion.insert(
+            id: 'project-link',
+            sourceType: 'entity',
+            sourceId: project,
+            targetType: 'decision',
+            targetId: 'decision-1',
+            relationType: 'supports',
+          ),
+        );
+
+    await db.projectsDao.deleteProject(project);
+
+    expect(await db.projectsDao.findProject(project), isNull);
+    expect(await db.projectsDao.getHistory(project), isEmpty);
+    expect(
+      await (db.select(
+        db.projectEntryEvidence,
+      )..where((row) => row.entryId.equals(entry))).get(),
+      isEmpty,
+    );
+    expect(
+      await (db.select(
+        db.relations,
+      )..where((row) => row.sourceId.equals(project))).get(),
+      isEmpty,
+    );
+  });
+
   test('correction appends a replacement and preserves the original', () async {
     final project = await db.projectsDao.createProject(name: 'Correction test');
     final intent = await db.projectsDao.recordIntent(

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../data/database.dart';
+import '../../data/daos/projects_dao.dart';
 import '../../widgets/command_header.dart';
 import '../../widgets/section_header.dart';
 
@@ -19,6 +20,44 @@ class ProjectDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
+  Future<void> _deleteProject(AppDatabase db, String projectName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete project?'),
+        content: Text(
+          'This permanently deletes "$projectName", including its steps, setup, plans, results, evidence, and project links.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Delete permanently'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await db.projectsDao.deleteProject(widget.projectId);
+      if (mounted) context.go('/projects');
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not delete project: $error')),
+        );
+      }
+    }
+  }
+
   Future<void> _captureIntent(AppDatabase db) async {
     final focus = TextEditingController();
     final evidence = TextEditingController();
@@ -174,9 +213,23 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           stream: db.projectsDao.watchHistory(widget.projectId),
           builder: (context, historySnapshot) {
             final history = historySnapshot.data ?? const <ProjectEntry>[];
+            final setup = history.where((e) => e.kind == 'setup').firstOrNull;
+            final milestones =
+                (setup?.setupPayload?['milestones'] as List?)
+                    ?.whereType<Map>()
+                    .map(
+                      (milestone) => ProjectMilestone.fromJson(
+                        Map<String, dynamic>.from(milestone),
+                      ),
+                    )
+                    .toList()
+                  ?..sort((a, b) => a.ordinal.compareTo(b.ordinal));
             final latest = history.where((e) => e.kind != 'setup').firstOrNull;
             return Scaffold(
-              appBar: CommandHeader(title: project.name),
+              appBar: CommandHeader(
+                title: project.name,
+                onDelete: () => _deleteProject(db, project.name),
+              ),
               body: ListView(
                 padding: const EdgeInsets.all(AppSpacing.marginMobile),
                 children: [
@@ -186,6 +239,35 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                       false) ...[
                     const SizedBox(height: AppSpacing.sm),
                     Text(project.metadata!['desiredOutcome'] as String),
+                  ],
+                  if (milestones?.isNotEmpty ?? false) ...[
+                    const SectionHeader(
+                      title: 'Steps',
+                      icon: Icons.route_outlined,
+                    ),
+                    Card(
+                      child: Column(
+                        children: [
+                          for (var i = 0; i < milestones!.length; i++)
+                            ListTile(
+                              leading: CircleAvatar(
+                                radius: 14,
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
+                                foregroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimary,
+                                child: Text('${i + 1}'),
+                              ),
+                              title: Text(milestones[i].label),
+                              subtitle: milestones[i].description == null
+                                  ? null
+                                  : Text(milestones[i].description!),
+                            ),
+                        ],
+                      ),
+                    ),
                   ],
                   const SizedBox(height: AppSpacing.lg),
                   Row(

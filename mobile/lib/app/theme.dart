@@ -21,7 +21,8 @@ ThemeData buildAppTheme({bool dark = false}) {
     outline: dark ? const Color(0xFF919095) : AppColors.outline,
     outlineVariant: dark ? const Color(0xFF47464B) : AppColors.outlineVariant,
     primary: dark ? const Color(0xFFBEC2FF) : AppColors.primary,
-    onPrimary: dark ? const Color(0xFF303033) : AppColors.onPrimary,
+    // Keep text and icons readable on blue actions in dark mode.
+    onPrimary: dark ? Colors.white : AppColors.onPrimary,
     primaryContainer: dark ? const Color(0xFF343DFF) : AppColors.primaryContainer,
     onPrimaryContainer: dark ? const Color(0xFFB3B7FF) : AppColors.onPrimaryContainer,
     secondary: dark ? const Color(0xFFC6C6C7) : AppColors.secondary,
