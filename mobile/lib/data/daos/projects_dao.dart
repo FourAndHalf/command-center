@@ -278,6 +278,84 @@ class ProjectsDao extends DatabaseAccessor<AppDatabase>
     return id;
   }
 
+  /// Appends a full replacement for an intent or observation. The target is
+  /// never updated, so old expectations and citations remain immutable.
+  Future<String> correctEntry({
+    required String projectId,
+    required String targetEntryId,
+    String? focus,
+    String? expectedEvidence,
+    String? observedResult,
+    String? blocker,
+    String? lesson,
+    String? nextStep,
+    int? actualMinutes,
+  }) async {
+    await _requireProject(projectId);
+    final target = await (select(
+      projectEntries,
+    )..where((e) => e.id.equals(targetEntryId))).getSingleOrNull();
+    if (target == null || target.projectEntityId != projectId) {
+      throw ArgumentError.value(targetEntryId, 'targetEntryId');
+    }
+    if (target.logicalKind == 'setup') {
+      throw ArgumentError.value(
+        targetEntryId,
+        'targetEntryId',
+        'Setup history is corrected through project setup changes.',
+      );
+    }
+    final replacementResult = observedResult?.trim();
+    final replacementFocus = focus?.trim();
+    if (target.logicalKind == 'intent' &&
+        (replacementFocus == null || replacementFocus.isEmpty)) {
+      throw ArgumentError.value(
+        focus,
+        'focus',
+        'A corrected plan needs a focus.',
+      );
+    }
+    if (target.logicalKind == 'observation' &&
+        (replacementResult == null || replacementResult.isEmpty)) {
+      throw ArgumentError.value(
+        observedResult,
+        'observedResult',
+        'A corrected result is required.',
+      );
+    }
+    if (actualMinutes != null && actualMinutes < 0) {
+      throw ArgumentError.value(actualMinutes, 'actualMinutes');
+    }
+    final now = DateTime.now();
+    final id = _uuid.v4();
+    await into(projectEntries).insert(
+      ProjectEntriesCompanion.insert(
+        id: id,
+        projectEntityId: projectId,
+        kind: 'correction',
+        logicalKind: target.logicalKind,
+        rootEntryId: Value(target.rootEntryId ?? target.id),
+        correctionTargetId: Value(target.id),
+        relatedEntryId: Value(target.relatedEntryId),
+        orderingClaim: Value(target.orderingClaim),
+        recordedAt: now,
+        occurredAt: Value(target.occurredAt),
+        localDay: _day(now),
+        capturedOffsetMinutes: Value(now.timeZoneOffset.inMinutes),
+        focus: Value(replacementFocus),
+        expectedEvidence: Value(_nullIfBlank(expectedEvidence)),
+        observedResult: Value(replacementResult),
+        actualMinutes: Value(actualMinutes),
+        blocker: Value(_nullIfBlank(blocker)),
+        lesson: Value(_nullIfBlank(lesson)),
+        nextStep: Value(_nullIfBlank(nextStep)),
+        milestoneKey: Value(target.milestoneKey),
+        taskReference: Value(target.taskReference),
+      ),
+    );
+    return id;
+  }
+
   Future<void> _requireProject(String projectId) async {
     if (await findProject(projectId) == null) {
       throw StateError('Project unavailable.');

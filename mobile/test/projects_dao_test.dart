@@ -95,4 +95,27 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test('correction appends a replacement and preserves the original', () async {
+    final project = await db.projectsDao.createProject(name: 'Correction test');
+    final intent = await db.projectsDao.recordIntent(
+      projectId: project,
+      focus: 'Try the first approach',
+    );
+    final correction = await db.projectsDao.correctEntry(
+      projectId: project,
+      targetEntryId: intent,
+      focus: 'Try the revised approach',
+    );
+
+    final history = await db.projectsDao.getHistory(project);
+    expect(
+      history.singleWhere((entry) => entry.id == intent).focus,
+      'Try the first approach',
+    );
+    final corrected = history.singleWhere((entry) => entry.id == correction);
+    expect(corrected.kind, 'correction');
+    expect(corrected.correctionTargetId, intent);
+    expect(corrected.rootEntryId, intent);
+  });
 }
