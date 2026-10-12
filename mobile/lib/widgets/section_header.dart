@@ -21,19 +21,26 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.sm),
+      padding: const EdgeInsets.only(top: 32, bottom: AppSpacing.sm),
       child: Row(
         children: [
           if (accent != null) ...[
             Container(width: 3, height: 16, color: accent),
             const SizedBox(width: 8),
           ] else if (icon != null) ...[
-            Icon(icon, size: 16, color: AppColors.onSurfaceVariant),
+            Icon(icon, size: 16, color: scheme.onSurfaceVariant),
             const SizedBox(width: 8),
           ],
           Expanded(
-            child: Text(title, style: AppTypography.headlineMd.copyWith(fontSize: 17)),
+            child: Text(
+              title,
+              style: AppTypography.headlineMd.copyWith(
+                fontSize: 17,
+                color: scheme.onSurface,
+              ),
+            ),
           ),
           ?trailing,
         ],

@@ -8,12 +8,12 @@ import 'timeline_entry.dart';
 const double _spineWidth = 24;
 const double _dotY = 22;
 
-Color _toneColor(BadgeTone tone) => switch (tone) {
+Color _toneColor(ColorScheme scheme, BadgeTone tone) => switch (tone) {
       BadgeTone.tripwire => AppColors.tripwireAmber,
       BadgeTone.resolved => AppColors.resolvedEmerald,
-      BadgeTone.calibration => AppColors.calibrationIndigo,
-      BadgeTone.critical => AppColors.error,
-      BadgeTone.neutral => AppColors.onSurfaceVariant,
+      BadgeTone.calibration => scheme.primary,
+      BadgeTone.critical => scheme.error,
+      BadgeTone.neutral => scheme.onSurfaceVariant,
     };
 
 String _formatDate(DateTime d) {
@@ -33,6 +33,7 @@ class TimelineRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final onLeft = entry.side == TimelineSide.left;
     final card = _TimelineCard(entry: entry);
     return IntrinsicHeight(
@@ -44,7 +45,8 @@ class TimelineRow extends StatelessWidget {
             width: _spineWidth,
             child: CustomPaint(
               painter: _SpinePainter(
-                color: _toneColor(entry.tone),
+                color: _toneColor(scheme, entry.tone),
+                backgroundColor: scheme.surface,
                 stub: onLeft ? TimelineSide.left : TimelineSide.right,
               ),
             ),
@@ -57,16 +59,21 @@ class TimelineRow extends StatelessWidget {
 }
 
 class _SpinePainter extends CustomPainter {
-  _SpinePainter({required this.color, required this.stub});
+  _SpinePainter({
+    required this.color,
+    required this.backgroundColor,
+    required this.stub,
+  });
 
   final Color color;
+  final Color backgroundColor;
   final TimelineSide stub;
 
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final line = Paint()
-      ..color = AppColors.outlineVariant
+      ..color = color.withValues(alpha: 0.35)
       ..strokeWidth = 1.5;
     canvas.drawLine(Offset(cx, 0), Offset(cx, size.height), line);
     canvas.drawLine(
@@ -74,7 +81,7 @@ class _SpinePainter extends CustomPainter {
       Offset(stub == TimelineSide.left ? 0 : size.width, _dotY),
       line,
     );
-    canvas.drawCircle(Offset(cx, _dotY), 6, Paint()..color = AppColors.canvas);
+    canvas.drawCircle(Offset(cx, _dotY), 6, Paint()..color = backgroundColor);
     canvas.drawCircle(
       Offset(cx, _dotY),
       5,
@@ -87,7 +94,9 @@ class _SpinePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_SpinePainter old) =>
-      old.color != color || old.stub != stub;
+      old.color != color ||
+      old.backgroundColor != backgroundColor ||
+      old.stub != stub;
 }
 
 class _TimelineCard extends StatefulWidget {
@@ -105,6 +114,7 @@ class _TimelineCardState extends State<_TimelineCard> {
   @override
   Widget build(BuildContext context) {
     final entry = widget.entry;
+    final scheme = Theme.of(context).colorScheme;
     // Anchors (decisions/reviews/goals) read stronger than the signals
     // around them, so the original decision stays the visual focus.
     final isAnchor = entry.side == TimelineSide.left;
@@ -117,12 +127,12 @@ class _TimelineCardState extends State<_TimelineCard> {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Material(
         color: isAnchor
-            ? AppColors.surfaceContainerLow
-            : AppColors.surfaceContainerLow.withValues(alpha: 0.5),
+            ? scheme.surfaceContainerLow
+            : scheme.surfaceContainerLow.withValues(alpha: 0.5),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
           side: BorderSide(
-            color: isAnchor ? AppColors.outline : AppColors.outlineVariant,
+            color: isAnchor ? scheme.outline : scheme.outlineVariant,
           ),
         ),
         clipBehavior: Clip.antiAlias,
@@ -139,7 +149,7 @@ class _TimelineCardState extends State<_TimelineCard> {
                   _formatDate(entry.date),
                   style: AppTypography.monoMetric.copyWith(
                     fontSize: 12,
-                    color: AppColors.onSurfaceVariant,
+                    color: scheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -164,7 +174,7 @@ class _TimelineCardState extends State<_TimelineCard> {
                     overflow: expanded ? null : TextOverflow.ellipsis,
                     style: AppTypography.bodySm.copyWith(
                       fontSize: 12,
-                      color: AppColors.onSurfaceVariant,
+                      color: scheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -176,7 +186,7 @@ class _TimelineCardState extends State<_TimelineCard> {
                     overflow: expanded ? null : TextOverflow.ellipsis,
                     style: AppTypography.labelCaps.copyWith(
                       fontSize: 10,
-                      color: AppColors.outline,
+                      color: scheme.outline,
                     ),
                   ),
                 ],
@@ -188,7 +198,7 @@ class _TimelineCardState extends State<_TimelineCard> {
                       'OPEN RECORD →',
                       style: AppTypography.labelCaps.copyWith(
                         fontSize: 10,
-                        color: AppColors.calibrationIndigo,
+                        color: scheme.primary,
                       ),
                     ),
                   ),
@@ -210,6 +220,7 @@ class TimelineMonthHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     const months = [
       'January', 'February', 'March', 'April', 'May', 'June', 'July',
       'August', 'September', 'October', 'November', 'December',
@@ -220,14 +231,14 @@ class TimelineMonthHeader extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerHigh,
+            color: scheme.surfaceContainerHigh,
             borderRadius: BorderRadius.circular(AppRadius.full),
-            border: Border.all(color: AppColors.outlineVariant),
+            border: Border.all(color: scheme.outlineVariant),
           ),
           child: Text(
             '${months[date.month - 1]} ${date.year}'.toUpperCase(),
             style: AppTypography.labelCaps
-                .copyWith(color: AppColors.onSurfaceVariant),
+                .copyWith(color: scheme.onSurfaceVariant),
           ),
         ),
       ),

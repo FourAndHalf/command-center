@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../data/database.dart';
+import '../../widgets/command_header.dart';
 
 /// Simple LIKE-based search across decisions, goals, and events. Every
 /// result shows which record it came from (docs/prompt.md §18 provenance).
@@ -34,7 +35,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final db = ref.watch(databaseProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Search')),
+      appBar: const CommandHeader(title: 'Search'),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

@@ -23,29 +23,26 @@ class StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final valueColor = accent ?? AppColors.onSurface;
+    final scheme = Theme.of(context).colorScheme;
+    final valueColor = accent ?? scheme.onSurface;
 
-    // Fixed height + single-line text keeps every tile in a row identical
-    // regardless of label length or whether it has an icon.
     return Container(
-      height: 104,
+      height: 112,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.outlineVariant),
+        color: scheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: scheme.surfaceContainerHigh),
       ),
       child: Column(
         children: [
-          // Thin top rule gives each tile a defined edge.
-          Container(height: 2, color: accent ?? AppColors.outlineVariant),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md - 4,
-                vertical: AppSpacing.sm + 2,
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.md,
               ),
-              child: _content(valueColor),
+              child: _content(valueColor, scheme),
             ),
           ),
         ],
@@ -53,7 +50,7 @@ class StatTile extends StatelessWidget {
     );
   }
 
-  Widget _content(Color valueColor) {
+  Widget _content(Color valueColor, ColorScheme scheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -65,7 +62,7 @@ class StatTile extends StatelessWidget {
               child: Text(
                 label.toUpperCase(),
                 style: AppTypography.labelCaps.copyWith(
-                  color: accent ?? AppColors.outline,
+                  color: accent ?? scheme.outline,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -78,21 +75,22 @@ class StatTile extends StatelessWidget {
                   : Icon(
                       trailingIcon,
                       size: 14,
-                      color: accent ?? AppColors.outline,
+                      color: accent ?? scheme.outline,
                     ),
             ),
           ],
         ),
         Text(
           value,
-          style: AppTypography.headlineLg.copyWith(
+          style: AppTypography.displayHero.copyWith(
             color: valueColor,
-            fontSize: 28,
+            fontSize: 30,
+            height: 1,
           ),
         ),
         Text(
           sublabel.toUpperCase(),
-          style: AppTypography.labelCaps.copyWith(color: AppColors.outline),
+          style: AppTypography.labelCaps.copyWith(color: scheme.outline),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

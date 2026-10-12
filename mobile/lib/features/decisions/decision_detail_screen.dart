@@ -8,6 +8,7 @@ import '../../app/providers.dart';
 import '../../app/design_tokens.dart';
 import '../../data/database.dart';
 import '../../widgets/status_badge.dart';
+import '../../widgets/command_header.dart';
 
 /// "Decision Replay" (docs/prompt.md §16): why / what I knew / believed /
 /// felt / expected / what happened / reviews / related — the original
@@ -22,7 +23,7 @@ class DecisionDetailScreen extends ConsumerWidget {
     final db = ref.watch(databaseProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Decision')),
+      appBar: const CommandHeader(title: 'Decision'),
       body: StreamBuilder<Decision?>(
         stream: db.decisionsDao.getById(decisionId).asStream(),
         builder: (context, snapshot) {
@@ -34,7 +35,7 @@ class DecisionDetailScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             children: [
               Card(
-                color: Theme.of(context).colorScheme.primaryContainer,
+                color: Theme.of(context).colorScheme.surfaceContainerLowest,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -42,21 +43,47 @@ class DecisionDetailScreen extends ConsumerWidget {
                     children: [
                       Text(
                         decision.title.toUpperCase(),
-                        style: Theme.of(context).textTheme.titleLarge,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
-                      Text('${decision.type} · ${decision.status}'),
+                      Text(
+                        '${decision.type} · ${decision.status}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                       if (decision.context != null &&
                           decision.context!.isNotEmpty) ...[
                         const SizedBox(height: 12),
-                        const Text('WHY', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text(decision.context!),
+                        Text(
+                          'WHY',
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          decision.context!,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
                       ],
                       if (decision.expectedOutcome != null &&
                           decision.expectedOutcome!.isNotEmpty) ...[
                         const SizedBox(height: 12),
-                        const Text('WHAT I EXPECTED',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text(decision.expectedOutcome!),
+                        Text(
+                          'WHAT I EXPECTED',
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          decision.expectedOutcome!,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
                       ],
                     ],
                   ),

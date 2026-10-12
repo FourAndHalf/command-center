@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../data/database.dart';
+import '../../widgets/command_header.dart';
 
 /// Prediction calibration and life-area counts (docs/prompt.md §8), computed
 /// live from local records — no AI, no server, every number traceable back
@@ -15,7 +16,7 @@ class InsightsScreen extends ConsumerWidget {
     final db = ref.watch(databaseProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Insights')),
+      appBar: const CommandHeader(title: 'Insights'),
       body: StreamBuilder<List<Decision>>(
         stream: db.decisionsDao.watchAll(),
         builder: (context, decSnap) {

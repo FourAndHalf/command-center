@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../app/providers.dart';
 import '../../data/database.dart';
+import '../../widgets/command_header.dart';
 
 class GoalDetailScreen extends ConsumerWidget {
   const GoalDetailScreen({super.key, required this.goalId});
@@ -15,7 +16,7 @@ class GoalDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.watch(databaseProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Goal')),
+      appBar: const CommandHeader(title: 'Goal'),
       body: StreamBuilder<List<Goal>>(
         stream: db.goalsDao.watchAll(),
         builder: (context, snap) {

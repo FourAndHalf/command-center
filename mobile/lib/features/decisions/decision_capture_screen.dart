@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../app/providers.dart';
 import '../../data/database.dart';
+import '../../widgets/command_header.dart';
 
 const _decisionTypes = [
   'career',
@@ -69,7 +70,7 @@ class _DecisionCaptureScreenState extends ConsumerState<DecisionCaptureScreen> {
     final db = ref.watch(databaseProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Capture a decision')),
+      appBar: const CommandHeader(title: 'Capture a decision'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

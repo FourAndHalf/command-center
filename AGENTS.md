@@ -1,88 +1,89 @@
 # AGENTS.md
 
-Guidance for AI coding agents working in this repository.
+Repository guidance for coding agents.
 
-## Project
+## Product contract
 
-A private, self-hostable **Personal Command Center** for capturing decisions, preserving the context they were made in, and reviewing outcomes later. The core loop is:
+This is a private, self-hostable **Personal Command Center** for preserving decisions and learning from their outcomes:
 
 **Experience → Decision → Prediction → Outcome → Review → Learning → Future Decision**
 
-It is not a journal, second brain, habit tracker, or task manager. Every change should strengthen this loop.
+It is not a journal, second brain, habit tracker, task manager, or autonomous life assistant. A change belongs here only if it strengthens that loop.
 
-The full product spec is `docs/prompt.md`. Read it before making design decisions; it is the source of truth until code and docs supersede it.
+Before changing product behavior, architecture, or the data model, read `docs/prompt.md`. It is the product source of truth unless implemented code and newer project documentation clearly supersede it. For mobile UI work, also read `design/DESIGN.md` and the nearby implementation before editing.
 
-## Status
+## Repository reality
 
-No backend or web app yet — the repo contains the spec and milestone plan for those. `mobile/` is real: an offline-only Flutter app implementing the core decision/review/goal loop against a local Drift (SQLite) database, built ahead of the backend so there's something usable before a VPS exists. Its schema mirrors the eventual Postgres tables column-for-column (see `mobile/lib/data/tables.dart` for the mapping and the deliberate differences). Update this file as backend/web become real, and do not assume something exists without checking.
+- `mobile/` is the only implemented application. It is an offline Flutter app backed by local Drift/SQLite storage.
+- There is currently no `backend/`, `web/`, or `deploy/` implementation. Do not write code against, document, or test imaginary services.
+- The mobile schema intentionally anticipates the future PostgreSQL schema. `mobile/lib/data/tables.dart` documents every SQLite/Postgres mapping and deliberate difference.
+- The mobile app already includes decision capture and history, reviews and scheduling, goals, timeline, search, people, insights, reflections, settings, and local export. Inspect the code before assuming a flow is complete.
+- Generated Drift files (`*.g.dart`) are artifacts. Change tables or DAOs, then regenerate them; never hand-edit generated code.
 
-The mobile app's visual design follows `design/DESIGN.md` (the "Executive Command Center" design system: colors, typography, spacing, and component tokens) and the mockups in `design/*.png`. `mobile/lib/app/design_tokens.dart` and `mobile/lib/app/theme.dart` implement it; reuse those tokens and the shared widgets in `mobile/lib/widgets/` rather than hard-coding colors or styles in a screen. When the web app is eventually built, it should follow the same system rather than inventing its own.
+## Non-negotiable domain rules
 
-## Stack (fixed by the spec)
+1. **Preserve history.** Before a decision or goal changes, snapshot its previous state in the same transaction. Reviews, check-ins, and reflections are append-only. Never rewrite a past observation with present knowledge.
+2. **Keep categories of knowledge separate.** What happened, what the user knew, believed, felt, expected, and later observed are different fields and concepts.
+3. **Decision quality is not outcome quality.** Do not create good/bad decision scores. Calibration may measure recorded predictions, not personal worth or decision quality.
+4. **The human is authoritative.** AI output is a draft or inference until confirmed. Never invent dates, facts, motives, emotions, or outcomes; preserve unknowns as unknown.
+5. **Preserve provenance.** Records, search results, and AI answers must be traceable to their sources and label recorded fact, user statement, AI inference, and unknown distinctly.
+6. **Protect privacy and portability.** The product must remain useful with AI disabled. External AI is opt-in and must disclose what is sent. Do not log personal content. Keep all important data exportable as JSON, Markdown, CSV where appropriate, and original files.
+7. **Avoid psychological claims.** Report evidence such as “In 6 recorded decisions…”; do not diagnose or generalize with “You tend to…”.
 
-- Backend: Go modular monolith, REST + OpenAPI. Modules: `decisions`, `reviews`, `events`, `sources`, `entities`, `goals`, `search`, `notifications`, `ingestion`, `ai`.
-- Database: PostgreSQL only (system of record), pgvector, Postgres full-text search. UUID PKs, foreign keys, migrations, JSONB only where flexibility helps.
-- Frontend: Angular, TypeScript, Tailwind CSS, Angular CDK.
-- Mobile: Flutter.
-- Files: S3-compatible storage (MinIO in dev).
-- Background jobs: Go worker with PostgreSQL-backed job state.
+## Architecture boundaries
 
-Do not introduce microservices, Kubernetes, Neo4j, Kafka, Temporal, Elasticsearch, extra vector stores or databases, or autonomous agents. Any new technology needs a concrete problem it solves.
+The planned server stack is fixed: a Go modular monolith, REST/OpenAPI, PostgreSQL with full-text search and pgvector, Angular/TypeScript/Tailwind/CDK, S3-compatible files, and a Go worker with PostgreSQL-backed job state. The future OpenAPI document under `backend/` will be the generated-client contract.
 
-## Planned layout
+Do not introduce microservices, Kubernetes, Neo4j, Kafka, Temporal, Elasticsearch, another database/vector store, or autonomous agents without a demonstrated need and explicit approval. The relationship graph belongs in relational tables.
 
-```
-backend/    Go service, worker, migrations, OpenAPI spec
-web/        Angular app
-mobile/     Flutter app
-deploy/     docker-compose, Caddyfile, backup scripts
-docs/       Spec, design docs, milestone plan
-```
+All future ingestion must follow one path:
 
-Single repo by design; the OpenAPI spec in `backend/` is the contract for the generated web and mobile clients.
+`raw source → normalize → deduplicate → extract → candidate → human confirmation → canonical record`
 
-## Domain invariants (do not violate)
+Connectors only normalize sources; domain logic stays in the ingestion layer. Use content hashes and idempotency keys.
 
-1. **History is immutable.** Decisions are never rewritten. Changes create a `DecisionVersion` or a linked decision. `DecisionReview` rows are append-only.
-2. **Fact vs. interpretation.** Keep what happened / knew / believed / felt / expected / actually happened separate.
-3. **Decision quality ≠ outcome quality.** Never reduce decisions to a good/bad score.
-4. **Human is the source of truth.** AI output is a draft. AI-extracted fields are marked as such and need user confirmation before becoming canonical. Never invent dates, motivations, feelings, facts, or outcomes; mark unknowns as unknown.
-5. **Provenance.** Every record must answer "where did this come from?". Search results and AI answers cite underlying records and label them as recorded fact, user statement, AI inference, or unknown.
-6. **Portability.** Nothing may depend on a specific AI provider, vector DB, or cloud. Everything must be exportable (JSON, Markdown, CSV, original files).
-7. **Privacy.** Single-user, private by default. Do not log raw personal content. External AI is off unless explicitly enabled, and the data sent must be clearly identified. The app must remain fully useful with AI disabled.
-8. **No psychological diagnosis or personality analysis.** Prefer "In 6 recorded decisions…" over "You tend to…".
+Scheduling and notifications must be idempotent, retryable, auditable, and deduplicated. Snoozing changes `snoozed_until`, not the original due date. Overdue items remain visible until completed or dismissed.
 
-## Engineering rules
+Follow the phase order in `docs/prompt.md` §31. Finish the create → review → learn loop before broad integrations or infrastructure.
 
-- Ingestion: all sources go through one pipeline (raw source → normalize → dedupe → extract → candidate → human confirmation → canonical). Connectors only produce normalized sources and contain no business logic. Use idempotency keys and content hashes.
-- Notifications and scheduling must be idempotent, retryable, auditable, and deduplicated. A failed worker must not create duplicate notifications or reviews. Snoozing must preserve the original due date. Overdue reviews stay visible until completed or dismissed.
-- The graph lives in PostgreSQL relations, not a graph DB.
-- Keep the UI small: Today, Decisions, Reviews, Timeline, Search (secondary: Goals, Sources, Projects, Settings). No vanity-metric dashboards. On the decision detail screen, the original decision must stay visually distinct from later reviews.
-- Build in the phase order in `docs/prompt.md` §31. The first milestone is the full create → review → learn loop, seeded with realistic example data.
-- Add tests for domain logic, ingestion, scheduler, AI validation, and API endpoints alongside the code they cover.
+## Mobile conventions
 
-## Working style
+- State and dependencies: Riverpod providers in `mobile/lib/app/providers.dart`.
+- Persistence: Drift tables in `mobile/lib/data/tables.dart`; access data through DAOs in `mobile/lib/data/daos/`. Keep multi-write invariants transactional.
+- Navigation: GoRouter routes in `mobile/lib/app/router.dart`; shared phone navigation in `mobile/lib/app/app_shell.dart`.
+- Design: `design/DESIGN.md` defines the Boro “Quiet Confidence” system. Reuse `mobile/lib/app/design_tokens.dart`, `mobile/lib/app/theme.dart`, and shared widgets in `mobile/lib/widgets/`. Do not hard-code screen-local colors, type styles, spacing, radii, or duplicate shared components.
+- UI: keep the original decision visually distinct from later reviews. Favor focused Today, Decisions, Goals, Reviews, Timeline, and Search flows over vanity dashboards.
+- Schema changes: update the Drift source, add a migration and increment `schemaVersion` when persisted data requires it, regenerate code, and add or update database tests.
+- Tests live in `mobile/test/`; use an in-memory `NativeDatabase` for persistence tests.
 
-- Make the smallest change that solves the task; do not refactor or reformat unrelated code.
-- Match the conventions of surrounding code.
-- State assumptions and ask when requirements are ambiguous rather than guessing.
-- Verify changes by running the relevant tests or build before calling work done.
-- Never commit secrets, `.env` files, database dumps, or personal data. See `.gitignore`.
+## Workflow
 
-## Git workflow
+For feature-sized code work, use the repository's gstack sequence:
 
-- Never develop directly on `main`. Create every feature, fix, or chore on its own branch (`feature/<short-name>`, `fix/<short-name>`, `chore/<short-name>`) cut from an up-to-date `main`.
-- Commit on the feature branch in small, coherent commits.
-- When development is done and tests pass, integrate the branch back into `main`, then delete the stale branch locally (and on the remote if it was pushed).
-- Only run the integration and delete steps when the work is verified; don't leave merged branches lying around.
+1. Run `gstack-autoplan` before implementation (`gstack-office-hours` first if the request is vague).
+2. Implement the agreed scope.
+3. Run `gstack-review`.
+4. Run `gstack-qa` when there is a runnable surface.
+5. Report changed files, verification performed, and remaining risks.
 
-## Commands
+This full sequence is unnecessary for small documentation-only or mechanical edits. Never deploy or perform destructive actions without explicit confirmation.
 
-Backend/web: none established yet.
+Work narrowly: inspect the surrounding implementation, preserve unrelated changes in a dirty worktree, and do not refactor opportunistically. Add tests beside changed behavior. Never commit secrets, `.env` files, database dumps, or personal data.
 
-Mobile (`mobile/`):
-- `flutter pub get` — install dependencies
-- `dart run build_runner build --delete-conflicting-outputs` — regenerate Drift/DAO code after changing `lib/data/tables.dart` or a DAO
-- `flutter analyze` — lint
-- `flutter test` — run tests (`test/database_test.dart` covers versioning, append-only reviews, snooze behavior)
-- `flutter run` — run on a connected device/emulator
+## Git
+
+- Do not develop on `main`. Use `feature/<name>`, `fix/<name>`, or `chore/<name>` from an up-to-date `main`.
+- Before switching branches or editing, inspect the worktree and preserve changes you did not create. Do not move an existing dirty worktree onto a new branch without the user's direction.
+- Keep commits small and coherent. Do not commit, push, merge, deploy, or delete branches unless the user asks for that operation.
+- When explicitly asked to finish integration, first verify the branch, merge it into `main`, then remove the merged local branch and any pushed remote branch.
+
+## Mobile commands
+
+Run from `mobile/`:
+
+- `flutter pub get` — install or update dependencies.
+- `dart run build_runner build --delete-conflicting-outputs` — regenerate Drift/DAO code after table or DAO changes.
+- `dart format --output=none --set-exit-if-changed lib test` — check formatting.
+- `flutter analyze` — run static analysis.
+- `flutter test` — run the test suite.
+- `flutter run` — exercise UI behavior on a device or emulator.

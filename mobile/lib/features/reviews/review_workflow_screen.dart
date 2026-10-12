@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../app/providers.dart';
 import '../../data/database.dart';
+import '../../widgets/command_header.dart';
 
 /// The review workflow (docs/prompt.md §8): the 10 core questions plus 4
 /// optional ones. Nothing here is required — an empty field is fine.
@@ -35,7 +36,7 @@ class _ReviewWorkflowScreenState extends ConsumerState<ReviewWorkflowScreen> {
     final db = ref.watch(databaseProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Review')),
+      appBar: const CommandHeader(title: 'Review'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

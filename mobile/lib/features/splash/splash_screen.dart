@@ -76,11 +76,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // The app icon and this splash sit on the same deep-zinc canvas
-      // (design/DESIGN.md); colorScheme.primary is a light "on-dark-surface"
-      // role in this design system, not a background, so using it here
-      // washed the logo out to near-white.
-      backgroundColor: AppColors.canvas,
+      backgroundColor: AppColors.surface,
       body: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {

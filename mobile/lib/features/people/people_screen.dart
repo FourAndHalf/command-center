@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../app/providers.dart';
 import '../../data/database.dart';
+import '../../widgets/command_header.dart';
 
 const _entityTypes = [
   'person',
@@ -25,7 +26,7 @@ class PeopleScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.watch(databaseProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('People & entities')),
+      appBar: const CommandHeader(title: 'People & entities'),
       body: StreamBuilder<List<Entity>>(
         stream: db.entitiesDao.watchAll(),
         builder: (context, snapshot) {

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../app/design_tokens.dart';
-import 'status_badge.dart';
+import '../app/providers.dart';
 
-/// The "COMMAND [ACTIVE] / [screen name]" header row at the top of every
-/// primary screen (design/DESIGN.md mockups), with a capture shortcut and a
-/// link to Settings via the app mark.
-class CommandHeader extends StatelessWidget implements PreferredSizeWidget {
+/// Branded header shared by every page. The selected product icon remains the
+/// visual anchor while the title and actions inherit the active theme.
+class CommandHeader extends ConsumerWidget implements PreferredSizeWidget {
   const CommandHeader({super.key, required this.title, this.onCapture});
 
   final String title;
@@ -17,41 +17,55 @@ class CommandHeader extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
+    final scheme = Theme.of(context).colorScheme;
     return AppBar(
       titleSpacing: AppSpacing.marginMobile,
       title: Row(
         children: [
-          Text('COMMAND', style: AppTypography.headlineMd.copyWith(fontSize: 16)),
-          const SizedBox(width: 8),
-          const StatusBadge('Active'),
-          const SizedBox(width: 8),
-          Text('/', style: AppTypography.bodyMd.copyWith(color: AppColors.outline)),
-          const SizedBox(width: 8),
+          SizedBox(
+            width: 34,
+            height: 34,
+            child: Image.asset(
+              'assets/icon/app_icon.png',
+              fit: BoxFit.contain,
+              semanticLabel: 'Command Center',
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               title,
-              style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+              style: AppTypography.headlineMd.copyWith(
+                fontSize: 22,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
       ),
       actions: [
-        if (onCapture != null)
-          IconButton(
-            icon: const Icon(Icons.add),
+          if (onCapture != null)
+            IconButton(
+            icon: const Icon(Icons.add, size: 21),
             style: IconButton.styleFrom(
-              backgroundColor: AppColors.surfaceContainerHigh,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.sm * 2),
-              ),
+              backgroundColor: scheme.primaryContainer,
+              foregroundColor: scheme.onPrimaryContainer,
+              shape: const StadiumBorder(),
             ),
             onPressed: onCapture,
           ),
         const SizedBox(width: 8),
         IconButton(
-          icon: Image.asset('assets/icon/splash_logo.png'),
+          icon: Icon(isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+          tooltip: isDark ? 'Use light mode' : 'Use dark mode',
+          onPressed: () => ref.read(themeModeProvider.notifier).state =
+              isDark ? ThemeMode.light : ThemeMode.dark,
+        ),
+        IconButton(
+          icon: const Icon(Icons.tune, size: 20),
           tooltip: 'Settings',
           onPressed: () => context.push('/settings'),
         ),

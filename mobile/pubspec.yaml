@@ -30,7 +30,8 @@ dependencies:
   timezone: ^0.9.4
 
   # Export / share
-  share_plus: ^10.1.4
+  share_plus: ^13.3.1
+  file_picker: ^13.1.0
 
   # Routing
   go_router: ^14.6.2
@@ -47,6 +48,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/icon/app_icon.png
     - assets/icon/splash_logo.png
   fonts:
     - family: Geist

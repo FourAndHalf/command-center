@@ -6,7 +6,9 @@ plugins {
 
 android {
     namespace = "com.commandcenter.mobile"
-    compileSdk = flutter.compileSdkVersion
+    // file_picker's Android lifecycle dependency requires API 36 at compile
+    // time. This does not change targetSdk or the minimum supported device.
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

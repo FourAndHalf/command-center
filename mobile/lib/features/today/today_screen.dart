@@ -172,9 +172,14 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             ? DateTime.now().difference(s.nextDueAt!).inDays
             : 0;
         return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppRadius.xl),
+            onTap: decision == null
+                ? null
+                : () => context.push('/decisions/${decision.id}'),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -223,6 +228,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   ],
                 ),
               ],
+              ),
             ),
           ),
         );
@@ -287,9 +293,12 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         }
 
         return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppRadius.xl),
+            onTap: () => context.push('/decisions/${d.id}'),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -313,6 +322,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   style: AppTypography.labelCaps.copyWith(color: AppColors.outline),
                 ),
               ],
+              ),
             ),
           ),
         );

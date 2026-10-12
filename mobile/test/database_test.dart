@@ -2,6 +2,9 @@ import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/data/database.dart';
+import 'package:mobile/data/export_service.dart';
+import 'dart:convert';
+import 'dart:io';
 
 void main() {
   late AppDatabase db;
@@ -101,5 +104,61 @@ void main() {
     final current =
         await (db.select(db.goals)..where((g) => g.id.equals('g1'))).getSingle();
     expect(current.status, 'achieved');
+  });
+
+  test('imports an exported JSON snapshot and replaces existing data', () async {
+    await db.decisionsDao.insertDecision(
+      DecisionsCompanion.insert(id: 'old', title: 'Old data', type: 'other'),
+    );
+    final service = ExportService(db);
+    final file = File('${Directory.systemTemp.path}/command-center-test.json');
+    await file.writeAsString(jsonEncode({
+      'format_version': 1,
+      'decisions': [
+        {
+          'id': 'new',
+          'title': 'Imported decision',
+          'type': 'career',
+          'status': 'active',
+          'decisionAt': null,
+          'context': null,
+          'objective': null,
+          'rationale': null,
+          'alternatives': null,
+          'constraints': null,
+          'emotionalContext': null,
+          'expectedOutcome': null,
+          'successCriteria': null,
+          'failureConditions': null,
+          'confidence': null,
+          'importance': null,
+          'reversibility': null,
+          'decideBy': null,
+          'openQuestions': null,
+          'tags': null,
+          'createdAt': DateTime(2026, 1, 1).millisecondsSinceEpoch,
+          'updatedAt': DateTime(2026, 1, 1).millisecondsSinceEpoch,
+        },
+      ],
+    }));
+
+    final summary = await service.importFromJson(file);
+    expect(summary.rowCount, 1);
+    expect(await db.decisionsDao.getById('old'), isNull);
+    expect((await db.decisionsDao.getById('new'))?.title, 'Imported decision');
+    await file.delete();
+  });
+
+  test('rejects malformed import before changing the database', () async {
+    await db.decisionsDao.insertDecision(
+      DecisionsCompanion.insert(id: 'keep', title: 'Keep me', type: 'other'),
+    );
+    final service = ExportService(db);
+    final file = File('${Directory.systemTemp.path}/command-center-bad.json');
+    await file.writeAsString('{"decisions": "not an array"}');
+
+    await expectLater(service.importFromJson(file), throwsFormatException);
+    expect((await db.decisionsDao.getById('keep'))?.title, 'Keep me');
+    await file.delete();
   });
 }

@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../app/providers.dart';
 import '../../data/database.dart';
+import '../../widgets/command_header.dart';
 
 /// Quarterly/yearly reflection (docs/prompt.md §10): a structured pass over
 /// goals, decisions, reviews, and lessons for the period, saved as an
@@ -15,7 +16,7 @@ class ReflectionScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.watch(databaseProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Reflection')),
+      appBar: const CommandHeader(title: 'Reflection'),
       body: StreamBuilder<List<Reflection>>(
         stream: db.select(db.reflections).watch(),
         builder: (context, snapshot) {
