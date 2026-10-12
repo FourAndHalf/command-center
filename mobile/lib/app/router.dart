@@ -18,6 +18,7 @@ import '../features/projects/projects_list_screen.dart';
 import '../features/projects/project_capture_screen.dart';
 import '../features/projects/project_detail_screen.dart';
 import '../features/projects/project_decision_review_screen.dart';
+import '../features/projects/project_weekly_comparison_screen.dart';
 import '../features/splash/splash_screen.dart';
 import 'app_shell.dart';
 
@@ -78,10 +79,15 @@ final appRouter = GoRouter(
             ),
             GoRoute(
               path: ':id',
-              builder: (_, state) => ProjectDetailScreen(
-                projectId: state.pathParameters['id']!,
-              ),
+              builder: (_, state) =>
+                  ProjectDetailScreen(projectId: state.pathParameters['id']!),
               routes: [
+                GoRoute(
+                  path: 'compare',
+                  builder: (_, state) => ProjectWeeklyComparisonScreen(
+                    projectId: state.pathParameters['id']!,
+                  ),
+                ),
                 GoRoute(
                   path: 'review',
                   builder: (_, state) => ProjectDecisionReviewScreen(

@@ -257,6 +257,16 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                     icon: const Icon(Icons.rate_review_outlined),
                     label: const Text('Start decision review'),
                   ),
+                  const SizedBox(height: AppSpacing.sm),
+                  TextButton.icon(
+                    onPressed: history.where((e) => e.kind != 'setup').isEmpty
+                        ? null
+                        : () => context.push(
+                            '/projects/${widget.projectId}/compare',
+                          ),
+                    icon: const Icon(Icons.compare_arrows_outlined),
+                    label: const Text('Compare this week'),
+                  ),
                 ],
               ),
             );
