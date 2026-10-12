@@ -46,10 +46,23 @@ class SettingsScreen extends ConsumerWidget {
             ),
             onTap: () => _importData(context, exportService),
           ),
+          ListTile(
+            leading: const Icon(Icons.auto_awesome_outlined),
+            title: const Text('AI review perspective'),
+            subtitle: Text(
+              ref.watch(aiReviewSettingsProvider).apiKey.isEmpty
+                  ? 'Not configured · key stays in memory only'
+                  : 'Configured for ${ref.watch(aiReviewSettingsProvider).model}',
+            ),
+            onTap: () => _configureAi(context, ref),
+          ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.delete_forever, color: Colors.red),
-            title: const Text('Delete all data', style: TextStyle(color: Colors.red)),
+            title: const Text(
+              'Delete all data',
+              style: TextStyle(color: Colors.red),
+            ),
             subtitle: const Text('Cannot be undone. Export first.'),
             onTap: () => _confirmDelete(context, exportService),
           ),
@@ -62,6 +75,61 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _configureAi(BuildContext context, WidgetRef ref) async {
+    final current = ref.read(aiReviewSettingsProvider);
+    final keyController = TextEditingController(text: current.apiKey);
+    final modelController = TextEditingController(text: current.model);
+    final save = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('AI review perspective'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'This sends selected decision and project records to the configured provider. The key is kept only for this app session and is never exported or logged.',
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: keyController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'API key'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: modelController,
+                decoration: const InputDecoration(
+                  labelText: 'Model identifier',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Save for this session'),
+          ),
+        ],
+      ),
+    );
+    if (save == true) {
+      ref.read(aiReviewSettingsProvider.notifier).state = AiReviewSettings(
+        apiKey: keyController.text.trim(),
+        model: modelController.text.trim().isEmpty
+            ? current.model
+            : modelController.text.trim(),
+      );
+    }
+    keyController.dispose();
+    modelController.dispose();
   }
 
   Future<void> _importData(BuildContext context, ExportService service) async {
@@ -102,13 +170,15 @@ class SettingsScreen extends ConsumerWidget {
       );
     } on Object catch (error) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Import failed: $error')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Import failed: $error')));
     }
   }
 
-  Future<void> _confirmDelete(BuildContext context, ExportService service) async {
+  Future<void> _confirmDelete(
+    BuildContext context,
+    ExportService service,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(

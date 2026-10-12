@@ -17,6 +17,7 @@ import '../features/settings/settings_screen.dart';
 import '../features/projects/projects_list_screen.dart';
 import '../features/projects/project_capture_screen.dart';
 import '../features/projects/project_detail_screen.dart';
+import '../features/projects/project_decision_review_screen.dart';
 import '../features/splash/splash_screen.dart';
 import 'app_shell.dart';
 
@@ -80,6 +81,14 @@ final appRouter = GoRouter(
               builder: (_, state) => ProjectDetailScreen(
                 projectId: state.pathParameters['id']!,
               ),
+              routes: [
+                GoRoute(
+                  path: 'review',
+                  builder: (_, state) => ProjectDecisionReviewScreen(
+                    projectId: state.pathParameters['id']!,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

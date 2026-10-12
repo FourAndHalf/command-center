@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/data/database.dart';
@@ -131,4 +132,43 @@ void main() {
     expect(matches.single.projectName, 'Audio research');
     expect(matches.single.entry.projectEntityId, project);
   });
+
+  test(
+    'decision review saves exact project citations and links the decision',
+    () async {
+      final project = await db.projectsDao.createProject(
+        name: 'Reviewable project',
+      );
+      await db.decisionsDao.insertDecision(
+        DecisionsCompanion.insert(
+          id: 'decision-1',
+          title: 'Continue?',
+          type: 'technical',
+        ),
+      );
+      final entry = await db.projectsDao.recordObservation(
+        projectId: project,
+        observedResult: 'The observed result is recorded.',
+      );
+
+      await db.projectsDao.saveDecisionReviewWithCitations(
+        review: DecisionReviewsCompanion.insert(
+          id: 'review-1',
+          decisionId: 'decision-1',
+          currentView: const Value('Draft confirmed by the user.'),
+        ),
+        projectId: project,
+        entryIds: [entry],
+      );
+
+      final citations = await (db.select(
+        db.projectReviewEntries,
+      )..where((row) => row.reviewId.equals('review-1'))).get();
+      final relation = await (db.select(
+        db.relations,
+      )..where((row) => row.sourceId.equals(project))).getSingle();
+      expect(citations.single.entryId, entry);
+      expect(relation.targetId, 'decision-1');
+    },
+  );
 }

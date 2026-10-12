@@ -20,3 +20,16 @@ project's setup history; changing the starter later cannot rewrite that project.
 
 All records are local and remain useful with AI disabled. Corrections append a
 new record so the original expectation and evidence remain visible.
+
+## Decision reviews and optional AI perspective
+
+From a project, choose **Start decision review**, select an existing Decision,
+and choose the exact project records that support the review. Saving creates an
+immutable review and citation links back to those records. It never invents a
+Decision or silently retargets an old citation.
+
+The optional third-person perspective is a draft. The app sends only the
+selected Decision fields and project records after you request it. Review and
+edit the response before saving it. Configure the provider and model in
+Settings; the API key is kept in memory for the current session only and is
+never exported or logged.

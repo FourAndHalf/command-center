@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
@@ -246,6 +247,16 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                         '${entry.localDay} · ${entry.logicalKind}',
                       ),
                     ),
+                  const SizedBox(height: AppSpacing.lg),
+                  OutlinedButton.icon(
+                    onPressed: history.where((e) => e.kind != 'setup').isEmpty
+                        ? null
+                        : () => context.push(
+                            '/projects/${widget.projectId}/review',
+                          ),
+                    icon: const Icon(Icons.rate_review_outlined),
+                    label: const Text('Start decision review'),
+                  ),
                 ],
               ),
             );

@@ -52,7 +52,17 @@ const cardboardProjectMilestones = <ProjectMilestone>[
 /// Entries are append-only. Corrections are full replacement records and
 /// never mutate the original row, which keeps old expectations and evidence
 /// usable in later reviews and exports.
-@DriftAccessor(tables: [Entities, ProjectEntries, ProjectEntryEvidence])
+@DriftAccessor(
+  tables: [
+    Entities,
+    Relations,
+    Decisions,
+    DecisionReviews,
+    ProjectEntries,
+    ProjectEntryEvidence,
+    ProjectReviewEntries,
+  ],
+)
 class ProjectsDao extends DatabaseAccessor<AppDatabase>
     with _$ProjectsDaoMixin {
   ProjectsDao(super.db);
@@ -121,6 +131,74 @@ class ProjectsDao extends DatabaseAccessor<AppDatabase>
               ..limit(limit))
             .get();
     return _withProjectNames(entries);
+  }
+
+  Future<void> saveDecisionReviewWithCitations({
+    required DecisionReviewsCompanion review,
+    required String projectId,
+    required List<String> entryIds,
+  }) async {
+    if (entryIds.isEmpty) {
+      throw ArgumentError.value(
+        entryIds,
+        'entryIds',
+        'Select at least one project record.',
+      );
+    }
+    final decisionId = review.decisionId.value;
+    final reviewId = review.id.value;
+    await transaction(() async {
+      await _requireProject(projectId);
+      final decision = await (select(
+        decisions,
+      )..where((d) => d.id.equals(decisionId))).getSingleOrNull();
+      if (decision == null) throw StateError('Decision unavailable.');
+      final entries = await (select(
+        projectEntries,
+      )..where((e) => e.id.isIn(entryIds))).get();
+      if (entries.length != entryIds.length ||
+          entries.any(
+            (entry) =>
+                entry.projectEntityId != projectId ||
+                entry.logicalKind == 'setup',
+          )) {
+        throw ArgumentError.value(
+          entryIds,
+          'entryIds',
+          'Citations must belong to this project.',
+        );
+      }
+      await into(decisionReviews).insert(review);
+      final existingRelation =
+          await (select(relations)..where(
+                (relation) =>
+                    relation.sourceType.equals('entity') &
+                    relation.sourceId.equals(projectId) &
+                    relation.targetType.equals('decision') &
+                    relation.targetId.equals(decisionId),
+              ))
+              .getSingleOrNull();
+      if (existingRelation == null) {
+        await into(relations).insert(
+          RelationsCompanion.insert(
+            id: _uuid.v4(),
+            sourceType: 'entity',
+            sourceId: projectId,
+            targetType: 'decision',
+            targetId: decisionId,
+            relationType: 'supports',
+          ),
+        );
+      }
+      for (final entryId in entryIds) {
+        await into(projectReviewEntries).insert(
+          ProjectReviewEntriesCompanion.insert(
+            reviewId: reviewId,
+            entryId: entryId,
+          ),
+        );
+      }
+    });
   }
 
   Stream<List<ProjectEntrySearchResult>> watchRecentEntries({int limit = 100}) {
