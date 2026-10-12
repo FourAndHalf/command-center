@@ -19,7 +19,7 @@ class ExportService {
 
   Future<File> exportAllToJson() async {
     final payload = {
-      'format_version': 1,
+      'format_version': 2,
       'exported_at': DateTime.now().toIso8601String(),
       'decisions': await _db.select(_db.decisions).get(),
       'decision_versions': await _db.select(_db.decisionVersions).get(),
@@ -35,6 +35,13 @@ class ExportService {
       'relations': await _db.select(_db.relations).get(),
       'events': await _db.select(_db.events).get(),
       'reflections': await _db.select(_db.reflections).get(),
+      'project_entries': await _db.select(_db.projectEntries).get(),
+      'project_entry_evidence': await _db
+          .select(_db.projectEntryEvidence)
+          .get(),
+      'project_review_entries': await _db
+          .select(_db.projectReviewEntries)
+          .get(),
     };
 
     final dir = await getApplicationDocumentsDirectory();
@@ -82,6 +89,9 @@ class ExportService {
       await _insertAll(_db.relations, rows.relations);
       await _insertAll(_db.events, rows.events);
       await _insertAll(_db.reflections, rows.reflections);
+      await _insertAll(_db.projectEntries, rows.projectEntries);
+      await _insertAll(_db.projectEntryEvidence, rows.projectEntryEvidence);
+      await _insertAll(_db.projectReviewEntries, rows.projectReviewEntries);
     });
 
     return ImportSummary(rows.total);
@@ -95,8 +105,10 @@ class ExportService {
 
   _ImportRows _decodeRows(Map<String, dynamic> payload) {
     final formatVersion = payload['format_version'];
-    if (formatVersion != null && formatVersion != 1) {
-      throw FormatException('Unsupported export format version: $formatVersion');
+    if (formatVersion != null && formatVersion != 1 && formatVersion != 2) {
+      throw FormatException(
+        'Unsupported export format version: $formatVersion',
+      );
     }
 
     List<Map<String, dynamic>> listFor(String key) {
@@ -113,7 +125,11 @@ class ExportService {
       }).toList();
     }
 
-    T decode<T>(String key, Map<String, dynamic> row, T Function(Map<String, dynamic>) fromJson) {
+    T decode<T>(
+      String key,
+      Map<String, dynamic> row,
+      T Function(Map<String, dynamic>) fromJson,
+    ) {
       try {
         return fromJson(row);
       } on Object catch (error) {
@@ -121,15 +137,23 @@ class ExportService {
       }
     }
 
-    List<T> decodeList<T>(String key, T Function(Map<String, dynamic>) fromJson) =>
-        listFor(key).map((row) => decode(key, row, fromJson)).toList();
+    List<T> decodeList<T>(
+      String key,
+      T Function(Map<String, dynamic>) fromJson,
+    ) => listFor(key).map((row) => decode(key, row, fromJson)).toList();
 
     return _ImportRows(
       decisions: decodeList('decisions', Decision.fromJson),
-      decisionVersions: decodeList('decision_versions', DecisionVersion.fromJson),
+      decisionVersions: decodeList(
+        'decision_versions',
+        DecisionVersion.fromJson,
+      ),
       assumptions: decodeList('assumptions', Assumption.fromJson),
       decisionRisks: decodeList('decision_risks', DecisionRisk.fromJson),
-      decisionAdvice: decodeList('decision_advice', DecisionAdviceData.fromJson),
+      decisionAdvice: decodeList(
+        'decision_advice',
+        DecisionAdviceData.fromJson,
+      ),
       decisionReviews: decodeList('decision_reviews', DecisionReview.fromJson),
       goals: _orderGoals(decodeList('goals', Goal.fromJson)),
       goalVersions: decodeList('goal_versions', GoalVersion.fromJson),
@@ -139,6 +163,15 @@ class ExportService {
       relations: decodeList('relations', Relation.fromJson),
       events: decodeList('events', Event.fromJson),
       reflections: decodeList('reflections', Reflection.fromJson),
+      projectEntries: decodeList('project_entries', ProjectEntry.fromJson),
+      projectEntryEvidence: decodeList(
+        'project_entry_evidence',
+        ProjectEntryEvidenceData.fromJson,
+      ),
+      projectReviewEntries: decodeList(
+        'project_review_entries',
+        ProjectReviewEntry.fromJson,
+      ),
     );
   }
 
@@ -149,7 +182,8 @@ class ExportService {
     while (remaining.isNotEmpty) {
       final ready = remaining.where((goal) {
         final parentId = goal.parentGoalId;
-        return parentId == null || !remaining.any((item) => item.id == parentId);
+        return parentId == null ||
+            !remaining.any((item) => item.id == parentId);
       }).toList();
       if (ready.isEmpty) {
         throw const FormatException('Goals contain a parent cycle.');
@@ -167,7 +201,10 @@ class ExportService {
     return ordered;
   }
 
-  Future<void> _insertAll<T extends Table, D>(TableInfo<T, D> table, List<D> rows) async {
+  Future<void> _insertAll<T extends Table, D>(
+    TableInfo<T, D> table,
+    List<D> rows,
+  ) async {
     for (final row in rows) {
       await _db.into(table).insert(row as Insertable<D>);
     }
@@ -196,6 +233,9 @@ class _ImportRows {
     required this.relations,
     required this.events,
     required this.reflections,
+    required this.projectEntries,
+    required this.projectEntryEvidence,
+    required this.projectReviewEntries,
   });
 
   final List<Decision> decisions;
@@ -212,8 +252,12 @@ class _ImportRows {
   final List<Relation> relations;
   final List<Event> events;
   final List<Reflection> reflections;
+  final List<ProjectEntry> projectEntries;
+  final List<ProjectEntryEvidenceData> projectEntryEvidence;
+  final List<ProjectReviewEntry> projectReviewEntries;
 
-  int get total => decisions.length +
+  int get total =>
+      decisions.length +
       decisionVersions.length +
       assumptions.length +
       decisionRisks.length +
@@ -226,5 +270,8 @@ class _ImportRows {
       entities.length +
       relations.length +
       events.length +
-      reflections.length;
+      reflections.length +
+      projectEntries.length +
+      projectEntryEvidence.length +
+      projectReviewEntries.length;
 }

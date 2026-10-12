@@ -14,6 +14,9 @@ import '../features/people/people_screen.dart';
 import '../features/insights/insights_screen.dart';
 import '../features/reflection/reflection_screen.dart';
 import '../features/settings/settings_screen.dart';
+import '../features/projects/projects_list_screen.dart';
+import '../features/projects/project_capture_screen.dart';
+import '../features/projects/project_detail_screen.dart';
 import '../features/splash/splash_screen.dart';
 import 'app_shell.dart';
 
@@ -64,6 +67,22 @@ final appRouter = GoRouter(
           ],
         ),
         GoRoute(path: '/timeline', builder: (_, _) => const TimelineScreen()),
+        GoRoute(
+          path: '/projects',
+          builder: (_, _) => const ProjectsListScreen(),
+          routes: [
+            GoRoute(
+              path: 'new',
+              builder: (_, _) => const ProjectCaptureScreen(),
+            ),
+            GoRoute(
+              path: ':id',
+              builder: (_, state) => ProjectDetailScreen(
+                projectId: state.pathParameters['id']!,
+              ),
+            ),
+          ],
+        ),
         GoRoute(path: '/search', builder: (_, _) => const SearchScreen()),
         GoRoute(path: '/people', builder: (_, _) => const PeopleScreen()),
         GoRoute(path: '/insights', builder: (_, _) => const InsightsScreen()),

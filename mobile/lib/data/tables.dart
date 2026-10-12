@@ -195,7 +195,8 @@ class Goals extends Table {
   TextColumn get id => text()();
   TextColumn get title => text()();
   TextColumn get why => text().nullable()();
-  TextColumn get horizon => text()(); // this_month/this_quarter/1y/.../open_ended
+  TextColumn get horizon =>
+      text()(); // this_month/this_quarter/1y/.../open_ended
   DateTimeColumn get targetDate => dateTime().nullable()();
   TextColumn get parentGoalId => text().nullable().references(Goals, #id)();
   TextColumn get status => text().withDefault(const Constant('active'))();
@@ -241,8 +242,11 @@ class GoalCheckins extends Table {
 
 class ReviewSchedules extends Table {
   TextColumn get id => text()();
-  TextColumn get decisionId =>
-      text().nullable().references(Decisions, #id, onDelete: KeyAction.cascade)();
+  TextColumn get decisionId => text().nullable().references(
+    Decisions,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
   TextColumn get goalId =>
       text().nullable().references(Goals, #id, onDelete: KeyAction.cascade)();
 
@@ -272,8 +276,7 @@ class Entities extends Table {
   TextColumn get type =>
       text()(); // person/company/project/technology/location/life_area/...
   TextColumn get name => text()();
-  TextColumn get metadata =>
-      text().map(const JsonMapConverter()).nullable()();
+  TextColumn get metadata => text().map(const JsonMapConverter()).nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -289,8 +292,7 @@ class Relations extends Table {
   TextColumn get targetId => text()();
   TextColumn get relationType =>
       text()(); // supersedes/modifies/reverses/depends_on/.../supports
-  TextColumn get metadata =>
-      text().map(const JsonMapConverter()).nullable()();
+  TextColumn get metadata => text().map(const JsonMapConverter()).nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -304,8 +306,7 @@ class Events extends Table {
   DateTimeColumn get occurredAt => dateTime()();
   TextColumn get entityIds =>
       text().map(const JsonListConverter()).nullable()();
-  TextColumn get metadata =>
-      text().map(const JsonMapConverter()).nullable()();
+  TextColumn get metadata => text().map(const JsonMapConverter()).nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -324,4 +325,87 @@ class Reflections extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+// ---------------------------------------------------------------------------
+// Projects — reusable daily intent/result history
+// ---------------------------------------------------------------------------
+
+/// Append-only project history. A project is still represented by the generic
+/// Entities table; this table stores the typed records that make the project
+/// useful without turning it into a task manager.
+class ProjectEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get projectEntityId =>
+      text().references(Entities, #id, onDelete: KeyAction.cascade)();
+  TextColumn get kind =>
+      text()(); // setup/intent/observation/correction/focus_change
+  TextColumn get logicalKind =>
+      text()(); // setup/intent/observation/focus_change
+  TextColumn get rootEntryId => text().nullable()();
+  TextColumn get correctionTargetId => text().nullable().unique()();
+  TextColumn get relatedEntryId => text().nullable()();
+  TextColumn get setupRevisionId => text().nullable()();
+  TextColumn get orderingClaim => text().nullable()();
+  DateTimeColumn get recordedAt => dateTime()();
+  DateTimeColumn get occurredAt => dateTime().nullable()();
+  TextColumn get localDay => text()();
+  IntColumn get capturedOffsetMinutes => integer().nullable()();
+
+  TextColumn get focus => text().nullable()();
+  TextColumn get expectedEvidence => text().nullable()();
+  TextColumn get observedResult => text().nullable()();
+  IntColumn get actualMinutes => integer().nullable()();
+  TextColumn get blocker => text().nullable()();
+  TextColumn get lesson => text().nullable()();
+  TextColumn get nextStep => text().nullable()();
+  TextColumn get milestoneKey => text().nullable()();
+  TextColumn get taskReference => text().nullable()();
+  TextColumn get setupPayload =>
+      text().map(const JsonMapConverter()).nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => [
+    'CHECK (kind IN (\'setup\', \'intent\', \'observation\', \'correction\', \'focus_change\'))',
+    'CHECK (logical_kind IN (\'setup\', \'intent\', \'observation\', \'focus_change\'))',
+    'CHECK (actual_minutes IS NULL OR actual_minutes >= 0)',
+  ];
+
+  List<Index> get customIndexes => [
+    Index(
+      'project_entries_project_recorded_idx',
+      'project_entity_id, recorded_at, id',
+    ),
+    Index(
+      'project_entries_project_day_idx',
+      'project_entity_id, local_day, recorded_at, id',
+    ),
+    Index('project_entries_root_idx', 'root_entry_id'),
+    Index('project_entries_related_idx', 'related_entry_id'),
+  ];
+}
+
+class ProjectEntryEvidence extends Table {
+  TextColumn get id => text()();
+  TextColumn get entryId =>
+      text().references(ProjectEntries, #id, onDelete: KeyAction.cascade)();
+  TextColumn get label => text()();
+  TextColumn get referenceText => text().nullable()();
+  TextColumn get httpsUrl => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class ProjectReviewEntries extends Table {
+  TextColumn get reviewId =>
+      text().references(DecisionReviews, #id, onDelete: KeyAction.cascade)();
+  TextColumn get entryId =>
+      text().references(ProjectEntries, #id, onDelete: KeyAction.cascade)();
+
+  @override
+  Set<Column> get primaryKey => {reviewId, entryId};
 }

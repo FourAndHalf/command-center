@@ -87,6 +87,7 @@ class AppShell extends ConsumerWidget {
         child: Wrap(
           children: [
             _moreTile(sheetContext, Icons.timeline, 'Timeline', '/timeline'),
+            _moreTile(sheetContext, Icons.workspaces_outlined, 'Projects', '/projects'),
             _moreTile(sheetContext, Icons.search, 'Search', '/search'),
             _moreTile(sheetContext, Icons.insights, 'Insights', '/insights'),
             _moreTile(sheetContext, Icons.people_outline, 'People', '/people'),
