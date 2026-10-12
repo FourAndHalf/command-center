@@ -1,4 +1,5 @@
-import 'package:drift/drift.dart' show BooleanExpressionOperators, StringExpressionOperators;
+import 'package:drift/drift.dart'
+    show BooleanExpressionOperators, StringExpressionOperators;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -65,7 +66,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       future: _search(context, db, _query),
                       builder: (context, snapshot) {
                         if (snapshot.hasError) {
-                          return Center(child: Text('Search failed: ${snapshot.error}'));
+                          return Center(
+                            child: Text('Search failed: ${snapshot.error}'),
+                          );
                         }
                         final results = snapshot.data ?? [];
                         if (results.isEmpty) {
@@ -81,27 +84,37 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  Future<List<Widget>> _search(BuildContext context, AppDatabase db, String query) async {
+  Future<List<Widget>> _search(
+    BuildContext context,
+    AppDatabase db,
+    String query,
+  ) async {
     final pattern = '%$query%';
 
-    final decisions = await (db.select(db.decisions)
-          ..where((d) =>
-              d.title.like(pattern) |
-              d.objective.like(pattern) |
-              d.context.like(pattern)))
-        .get();
+    final decisions =
+        await (db.select(db.decisions)..where(
+              (d) =>
+                  d.title.like(pattern) |
+                  d.objective.like(pattern) |
+                  d.context.like(pattern),
+            ))
+            .get();
 
-    final goals = await (db.select(db.goals)
-          ..where((g) => g.title.like(pattern) | g.why.like(pattern)))
-        .get();
+    final goals = await (db.select(
+      db.goals,
+    )..where((g) => g.title.like(pattern) | g.why.like(pattern))).get();
 
-    final events = await (db.select(db.events)
-          ..where((e) => e.title.like(pattern) | e.description.like(pattern)))
-        .get();
+    final events = await (db.select(
+      db.events,
+    )..where((e) => e.title.like(pattern) | e.description.like(pattern))).get();
 
-    final reviews = await (db.select(db.decisionReviews)
-          ..where((r) => r.lesson.like(pattern) | r.whatActuallyHappened.like(pattern)))
-        .get();
+    final reviews =
+        await (db.select(db.decisionReviews)..where(
+              (r) =>
+                  r.lesson.like(pattern) | r.whatActuallyHappened.like(pattern),
+            ))
+            .get();
+    final projectEntries = await db.projectsDao.searchEntries(query);
 
     return [
       for (final d in decisions)
@@ -139,6 +152,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             onTap: () => context.push('/decisions/${r.decisionId}'),
           ),
         ),
+      for (final result in projectEntries)
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.workspaces_outlined),
+            title: Text(_projectEntryTitle(result.entry)),
+            subtitle: Text(
+              '${result.projectName} · ${result.entry.logicalKind}',
+            ),
+            onTap: () =>
+                context.push('/projects/${result.entry.projectEntityId}'),
+          ),
+        ),
     ];
   }
+
+  String _projectEntryTitle(ProjectEntry entry) =>
+      entry.observedResult ?? entry.focus ?? entry.lesson ?? 'Project entry';
 }

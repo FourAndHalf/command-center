@@ -1,7 +1,17 @@
 import '../../data/database.dart';
+import '../../data/daos/projects_dao.dart';
 import '../../widgets/status_badge.dart';
 
-enum TimelineKind { decision, review, goal, event, risk, advice, checkin }
+enum TimelineKind {
+  decision,
+  review,
+  goal,
+  project,
+  event,
+  risk,
+  advice,
+  checkin,
+}
 
 /// Left of the spine: the things the user decided/reviewed/aimed for.
 /// Right: the signals around them (events, risks, advice, check-ins).
@@ -33,12 +43,12 @@ class TimelineEntry {
   final String? route;
 
   TimelineSide get side => switch (kind) {
-        TimelineKind.decision ||
-        TimelineKind.review ||
-        TimelineKind.goal =>
-          TimelineSide.left,
-        _ => TimelineSide.right,
-      };
+    TimelineKind.decision ||
+    TimelineKind.review ||
+    TimelineKind.goal ||
+    TimelineKind.project => TimelineSide.left,
+    _ => TimelineSide.right,
+  };
 }
 
 String? _firstNonEmpty(List<String?> values) {
@@ -57,9 +67,12 @@ List<TimelineEntry> buildTimelineEntries({
   required List<DecisionRisk> risks,
   required List<DecisionAdviceData> advice,
   required List<GoalCheckin> checkins,
+  List<ProjectEntrySearchResult> projectEntries = const [],
 }) {
   final decisionTitles = {for (final d in decisions) d.id: d.title};
-  final decisionRoutes = {for (final d in decisions) d.id: '/decisions/${d.id}'};
+  final decisionRoutes = {
+    for (final d in decisions) d.id: '/decisions/${d.id}',
+  };
   final goalTitles = {for (final g in goals) g.id: g.title};
 
   final entries = <TimelineEntry>[
@@ -127,6 +140,21 @@ List<TimelineEntry> buildTimelineEntries({
         badge: 'Check-in',
         parent: goalTitles[c.goalId],
         route: '/goals/${c.goalId}',
+      ),
+    for (final result in projectEntries)
+      TimelineEntry(
+        kind: TimelineKind.project,
+        date: result.entry.occurredAt ?? result.entry.recordedAt,
+        title:
+            _firstNonEmpty([
+              result.entry.observedResult,
+              result.entry.focus,
+              result.entry.lesson,
+            ]) ??
+            'Project entry',
+        badge: result.entry.logicalKind,
+        subtitle: result.projectName,
+        route: '/projects/${result.entry.projectEntityId}',
       ),
   ]..sort((a, b) => b.date.compareTo(a.date));
   return entries;

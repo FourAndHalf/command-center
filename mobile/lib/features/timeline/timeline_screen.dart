@@ -7,15 +7,16 @@ import 'timeline_entry.dart';
 import 'timeline_provider.dart';
 import 'timeline_widgets.dart';
 
-enum _Filter { all, decisions, reviews, goals, signals }
+enum _Filter { all, decisions, reviews, goals, projects, signals }
 
 bool _matches(_Filter f, TimelineEntry e) => switch (f) {
-      _Filter.all => true,
-      _Filter.decisions => e.kind == TimelineKind.decision,
-      _Filter.reviews => e.kind == TimelineKind.review,
-      _Filter.goals => e.kind == TimelineKind.goal,
-      _Filter.signals => e.side == TimelineSide.right,
-    };
+  _Filter.all => true,
+  _Filter.decisions => e.kind == TimelineKind.decision,
+  _Filter.reviews => e.kind == TimelineKind.review,
+  _Filter.goals => e.kind == TimelineKind.goal,
+  _Filter.projects => e.kind == TimelineKind.project,
+  _Filter.signals => e.side == TimelineSide.right,
+};
 
 /// Chronological life timeline (docs/prompt.md §17). A spine runs down the
 /// middle: decisions, reviews and goals on the left, the signals around
@@ -39,7 +40,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     final children = <Widget>[];
     DateTime? month;
     for (final e in entries) {
-      if (month == null || month.year != e.date.year || month.month != e.date.month) {
+      if (month == null ||
+          month.year != e.date.year ||
+          month.month != e.date.month) {
         month = e.date;
         children.add(TimelineMonthHeader(date: e.date));
       }
@@ -52,7 +55,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(
-              AppSpacing.marginMobile, AppSpacing.sm, AppSpacing.marginMobile, 0,
+              AppSpacing.marginMobile,
+              AppSpacing.sm,
+              AppSpacing.marginMobile,
+              0,
             ),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -63,6 +69,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     (_Filter.decisions, 'Decisions'),
                     (_Filter.reviews, 'Reviews'),
                     (_Filter.goals, 'Goals'),
+                    (_Filter.projects, 'Projects'),
                     (_Filter.signals, 'Signals'),
                   ])
                     Padding(
@@ -82,7 +89,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                 ? const Center(child: Text('Nothing recorded yet.'))
                 : ListView(
                     padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.marginMobile, 0, AppSpacing.marginMobile, AppSpacing.lg,
+                      AppSpacing.marginMobile,
+                      0,
+                      AppSpacing.marginMobile,
+                      AppSpacing.lg,
                     ),
                     children: children,
                   ),

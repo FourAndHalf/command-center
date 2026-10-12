@@ -13,24 +13,30 @@ void main() {
 
   setUp(() async {
     db = AppDatabase(NativeDatabase.memory());
-    await db.decisionsDao.insertDecision(DecisionsCompanion.insert(
-      id: 'd1',
-      title: 'Move into robotics',
-      type: 'career',
-      decisionAt: Value(DateTime(2026, 3, 10)),
-    ));
-    await db.reviewsDao.insertReview(DecisionReviewsCompanion.insert(
-      id: 'r1',
-      decisionId: 'd1',
-      reviewedAt: Value(DateTime(2026, 5, 2)),
-      lesson: const Value('Start smaller'),
-    ));
-    await db.decisionsDao.insertRisk(DecisionRisksCompanion.insert(
-      id: 'k1',
-      decisionId: 'd1',
-      statement: 'Market shrinks',
-      notedAt: Value(DateTime(2026, 3, 11)),
-    ));
+    await db.decisionsDao.insertDecision(
+      DecisionsCompanion.insert(
+        id: 'd1',
+        title: 'Move into robotics',
+        type: 'career',
+        decisionAt: Value(DateTime(2026, 3, 10)),
+      ),
+    );
+    await db.reviewsDao.insertReview(
+      DecisionReviewsCompanion.insert(
+        id: 'r1',
+        decisionId: 'd1',
+        reviewedAt: Value(DateTime(2026, 5, 2)),
+        lesson: const Value('Start smaller'),
+      ),
+    );
+    await db.decisionsDao.insertRisk(
+      DecisionRisksCompanion.insert(
+        id: 'k1',
+        decisionId: 'd1',
+        statement: 'Market shrinks',
+        notedAt: Value(DateTime(2026, 3, 11)),
+      ),
+    );
   });
 
   tearDown(() async {
@@ -62,11 +68,15 @@ void main() {
   });
 
   testWidgets('screen shows decisions and signals', (tester) async {
-    await tester.pumpWidget(ProviderScope(
-      overrides: [databaseProvider.overrideWithValue(db)],
-      child: const MaterialApp(home: TimelineScreen()),
-    ));
-    await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 200)));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [databaseProvider.overrideWithValue(db)],
+        child: const MaterialApp(home: TimelineScreen()),
+      ),
+    );
+    await tester.runAsync(
+      () => Future.delayed(const Duration(milliseconds: 200)),
+    );
     await tester.pump();
 
     expect(find.text('Market shrinks'), findsOneWidget);
@@ -87,4 +97,34 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(milliseconds: 1));
   });
+
+  test(
+    'project entries appear as dated timeline records with a project route',
+    () async {
+      final project = await db.projectsDao.createProject(name: 'Cardboard');
+      await db.projectsDao.recordIntent(
+        projectId: project,
+        focus: 'Verify native editing access',
+        recordedAt: DateTime(2026, 6, 1),
+      );
+      final results = (await db.projectsDao.watchRecentEntries().first)
+          .where((result) => result.entry.logicalKind == 'intent')
+          .toList();
+      final entries = buildTimelineEntries(
+        decisions: const [],
+        reviews: const [],
+        goals: const [],
+        events: const [],
+        risks: const [],
+        advice: const [],
+        checkins: const [],
+        projectEntries: results,
+      );
+
+      expect(entries.single.kind, TimelineKind.project);
+      expect(entries.single.title, 'Verify native editing access');
+      expect(entries.single.subtitle, 'Cardboard');
+      expect(entries.single.route, '/projects/$project');
+    },
+  );
 }

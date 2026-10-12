@@ -98,6 +98,60 @@ class ProjectsDao extends DatabaseAccessor<AppDatabase>
             ..orderBy([(e) => OrderingTerm.asc(e.recordedAt)]))
           .get();
 
+  Future<List<ProjectEntrySearchResult>> searchEntries(
+    String query, {
+    int limit = 50,
+  }) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return const [];
+    final pattern = '%$trimmed%';
+    final entries =
+        await (select(projectEntries)
+              ..where(
+                (e) =>
+                    e.focus.like(pattern) |
+                    e.expectedEvidence.like(pattern) |
+                    e.observedResult.like(pattern) |
+                    e.blocker.like(pattern) |
+                    e.lesson.like(pattern) |
+                    e.nextStep.like(pattern) |
+                    e.taskReference.like(pattern),
+              )
+              ..orderBy([(e) => OrderingTerm.desc(e.recordedAt)])
+              ..limit(limit))
+            .get();
+    return _withProjectNames(entries);
+  }
+
+  Stream<List<ProjectEntrySearchResult>> watchRecentEntries({int limit = 100}) {
+    return (select(projectEntries)
+          ..orderBy([
+            (e) => OrderingTerm.desc(e.recordedAt),
+            (e) => OrderingTerm.desc(e.id),
+          ])
+          ..limit(limit))
+        .watch()
+        .asyncMap(_withProjectNames);
+  }
+
+  Future<List<ProjectEntrySearchResult>> _withProjectNames(
+    List<ProjectEntry> entries,
+  ) async {
+    if (entries.isEmpty) return const [];
+    final ids = entries.map((entry) => entry.projectEntityId).toSet();
+    final projects = await (select(
+      entities,
+    )..where((entity) => entity.id.isIn(ids))).get();
+    final names = {for (final project in projects) project.id: project.name};
+    return [
+      for (final entry in entries)
+        ProjectEntrySearchResult(
+          entry: entry,
+          projectName: names[entry.projectEntityId] ?? 'Project',
+        ),
+    ];
+  }
+
   Future<String> createProject({
     required String name,
     String? desiredOutcome,
@@ -390,4 +444,14 @@ class ProjectMilestone {
     'description': description,
     'ordinal': ordinal,
   };
+}
+
+class ProjectEntrySearchResult {
+  const ProjectEntrySearchResult({
+    required this.entry,
+    required this.projectName,
+  });
+
+  final ProjectEntry entry;
+  final String projectName;
 }

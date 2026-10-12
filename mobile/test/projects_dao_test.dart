@@ -118,4 +118,17 @@ void main() {
     expect(corrected.correctionTargetId, intent);
     expect(corrected.rootEntryId, intent);
   });
+
+  test('search results include the project name for provenance', () async {
+    final project = await db.projectsDao.createProject(name: 'Audio research');
+    await db.projectsDao.recordObservation(
+      projectId: project,
+      observedResult: 'The useful microphone range is narrower than expected',
+    );
+
+    final matches = await db.projectsDao.searchEntries('microphone');
+    expect(matches, hasLength(1));
+    expect(matches.single.projectName, 'Audio research');
+    expect(matches.single.entry.projectEntityId, project);
+  });
 }
