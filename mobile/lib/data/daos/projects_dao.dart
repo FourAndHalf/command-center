@@ -125,6 +125,7 @@ class ProjectsDao extends DatabaseAccessor<AppDatabase>
 
   Stream<List<ProjectEntrySearchResult>> watchRecentEntries({int limit = 100}) {
     return (select(projectEntries)
+          ..where((e) => e.logicalKind.isNotIn(const ['setup']))
           ..orderBy([
             (e) => OrderingTerm.desc(e.recordedAt),
             (e) => OrderingTerm.desc(e.id),
