@@ -334,6 +334,16 @@ class Reflections extends Table {
 /// Append-only project history. A project is still represented by the generic
 /// Entities table; this table stores the typed records that make the project
 /// useful without turning it into a task manager.
+@TableIndex(
+  name: 'project_entries_project_recorded_idx',
+  columns: {#projectEntityId, #recordedAt, #id},
+)
+@TableIndex(
+  name: 'project_entries_project_day_idx',
+  columns: {#projectEntityId, #localDay, #recordedAt, #id},
+)
+@TableIndex(name: 'project_entries_root_idx', columns: {#rootEntryId})
+@TableIndex(name: 'project_entries_related_idx', columns: {#relatedEntryId})
 class ProjectEntries extends Table {
   TextColumn get id => text()();
   TextColumn get projectEntityId =>
@@ -374,18 +384,6 @@ class ProjectEntries extends Table {
     'CHECK (actual_minutes IS NULL OR actual_minutes >= 0)',
   ];
 
-  List<Index> get customIndexes => [
-    Index(
-      'project_entries_project_recorded_idx',
-      'project_entity_id, recorded_at, id',
-    ),
-    Index(
-      'project_entries_project_day_idx',
-      'project_entity_id, local_day, recorded_at, id',
-    ),
-    Index('project_entries_root_idx', 'root_entry_id'),
-    Index('project_entries_related_idx', 'related_entry_id'),
-  ];
 }
 
 class ProjectEntryEvidence extends Table {

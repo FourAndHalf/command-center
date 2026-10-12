@@ -9567,6 +9567,22 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ProjectEntryEvidenceTable(this);
   late final $ProjectReviewEntriesTable projectReviewEntries =
       $ProjectReviewEntriesTable(this);
+  late final Index projectEntriesProjectRecordedIdx = Index(
+    'project_entries_project_recorded_idx',
+    'CREATE INDEX project_entries_project_recorded_idx ON project_entries (project_entity_id, recorded_at, id)',
+  );
+  late final Index projectEntriesProjectDayIdx = Index(
+    'project_entries_project_day_idx',
+    'CREATE INDEX project_entries_project_day_idx ON project_entries (project_entity_id, local_day, recorded_at, id)',
+  );
+  late final Index projectEntriesRootIdx = Index(
+    'project_entries_root_idx',
+    'CREATE INDEX project_entries_root_idx ON project_entries (root_entry_id)',
+  );
+  late final Index projectEntriesRelatedIdx = Index(
+    'project_entries_related_idx',
+    'CREATE INDEX project_entries_related_idx ON project_entries (related_entry_id)',
+  );
   late final DecisionsDao decisionsDao = DecisionsDao(this as AppDatabase);
   late final GoalsDao goalsDao = GoalsDao(this as AppDatabase);
   late final ReviewsDao reviewsDao = ReviewsDao(this as AppDatabase);
@@ -9595,6 +9611,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     projectEntries,
     projectEntryEvidence,
     projectReviewEntries,
+    projectEntriesProjectRecordedIdx,
+    projectEntriesProjectDayIdx,
+    projectEntriesRootIdx,
+    projectEntriesRelatedIdx,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
