@@ -14,11 +14,13 @@ class CommandHeader extends ConsumerWidget implements PreferredSizeWidget {
     required this.title,
     this.onCapture,
     this.onDelete,
+    this.deleteTooltip = 'Delete project',
   });
 
   final String title;
   final VoidCallback? onCapture;
   final VoidCallback? onDelete;
+  final String deleteTooltip;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -57,7 +59,7 @@ class CommandHeader extends ConsumerWidget implements PreferredSizeWidget {
         if (onDelete != null)
           IconButton(
             icon: const Icon(Icons.delete_outline, size: 21),
-            tooltip: 'Delete project',
+            tooltip: deleteTooltip,
             onPressed: onDelete,
           ),
         if (onCapture != null)

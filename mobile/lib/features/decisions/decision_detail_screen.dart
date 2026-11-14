@@ -23,7 +23,11 @@ class DecisionDetailScreen extends ConsumerWidget {
     final db = ref.watch(databaseProvider);
 
     return Scaffold(
-      appBar: const CommandHeader(title: 'Decision'),
+      appBar: CommandHeader(
+        title: 'Decision',
+        deleteTooltip: 'Delete decision',
+        onDelete: () => _confirmDelete(context, db),
+      ),
       body: StreamBuilder<Decision?>(
         stream: db.decisionsDao.getById(decisionId).asStream(),
         builder: (context, snapshot) {
@@ -219,6 +223,47 @@ class DecisionDetailScreen extends ConsumerWidget {
         ...children,
       ],
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, AppDatabase db) async {
+    final decision = await db.decisionsDao.getById(decisionId);
+    if (decision == null || !context.mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete decision?'),
+        content: Text(
+          'This permanently deletes "${decision.title}", including its '
+          'version history, assumptions, risks, advice, reviews, and '
+          'scheduled reviews. This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Delete permanently'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    try {
+      await db.decisionsDao.deleteDecision(decisionId);
+      if (context.mounted) context.go('/decisions');
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not delete decision: $error')),
+        );
+      }
+    }
   }
 
   Future<void> _startAdHocReview(BuildContext context, dynamic db) async {

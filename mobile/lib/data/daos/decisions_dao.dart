@@ -11,6 +11,47 @@ part 'decisions_dao.g.dart';
 class DecisionsDao extends DatabaseAccessor<AppDatabase> with _$DecisionsDaoMixin {
   DecisionsDao(super.db);
 
+  /// Permanently removes a decision and everything that hangs off it. SQLite
+  /// foreign keys are not enforced here, so dependants are deleted explicitly,
+  /// all in one transaction. This is a deliberate, user-confirmed erasure.
+  Future<void> deleteDecision(String id) async {
+    final d = attachedDatabase;
+    await transaction(() async {
+      final reviewIds = (await (d.select(d.decisionReviews)
+                ..where((r) => r.decisionId.equals(id)))
+              .get())
+          .map((r) => r.id)
+          .toList();
+
+      if (reviewIds.isNotEmpty) {
+        await (d.delete(d.projectReviewEntries)
+              ..where((l) => l.reviewId.isIn(reviewIds)))
+            .go();
+      }
+      await (d.delete(d.relations)
+            ..where((r) =>
+                (r.sourceType.equals('decision') & r.sourceId.equals(id)) |
+                (r.targetType.equals('decision') & r.targetId.equals(id)) |
+                (r.sourceType.equals('review') & r.sourceId.isIn(reviewIds)) |
+                (r.targetType.equals('review') & r.targetId.isIn(reviewIds))))
+          .go();
+      await (d.delete(d.decisionReviews)..where((r) => r.decisionId.equals(id)))
+          .go();
+      await (d.delete(d.reviewSchedules)..where((s) => s.decisionId.equals(id)))
+          .go();
+      await (d.delete(d.decisionAdvice)..where((a) => a.decisionId.equals(id)))
+          .go();
+      await (d.delete(d.decisionRisks)..where((r) => r.decisionId.equals(id)))
+          .go();
+      await (d.delete(d.assumptions)..where((a) => a.decisionId.equals(id)))
+          .go();
+      await (d.delete(d.decisionVersions)
+            ..where((v) => v.decisionId.equals(id)))
+          .go();
+      await (d.delete(d.decisions)..where((x) => x.id.equals(id))).go();
+    });
+  }
+
   Stream<List<Decision>> watchAll() => select(decisions).watch();
 
   Stream<List<Decision>> watchByStatus(String status) =>

@@ -17,6 +17,48 @@ void main() {
     await db.close();
   });
 
+  test('deleting a decision removes it and all dependants', () async {
+    await db.decisionsDao.insertDecision(DecisionsCompanion.insert(
+      id: 'd1',
+      title: 'Doomed',
+      type: 'career',
+    ));
+    await db.decisionsDao.insertDecision(DecisionsCompanion.insert(
+      id: 'd2',
+      title: 'Kept',
+      type: 'career',
+    ));
+    await db.decisionsDao.insertAssumption(AssumptionsCompanion.insert(
+      id: 'a1',
+      decisionId: 'd1',
+      statement: 'x',
+    ));
+    await db.decisionsDao.insertRisk(DecisionRisksCompanion.insert(
+      id: 'r1',
+      decisionId: 'd1',
+      statement: 'y',
+    ));
+    await db.schedulesDao.insertSchedule(ReviewSchedulesCompanion.insert(
+      id: 's1',
+      decisionId: const Value('d1'),
+      triggerType: 'time',
+    ));
+    await db.decisionsDao.insertAssumption(AssumptionsCompanion.insert(
+      id: 'a2',
+      decisionId: 'd2',
+      statement: 'z',
+    ));
+
+    await db.decisionsDao.deleteDecision('d1');
+
+    expect(await db.decisionsDao.getById('d1'), isNull);
+    expect(await db.decisionsDao.watchAssumptions('d1').first, isEmpty);
+    expect(await db.decisionsDao.watchRisks('d1').first, isEmpty);
+    expect(await db.select(db.reviewSchedules).get(), isEmpty);
+    expect(await db.decisionsDao.getById('d2'), isNotNull);
+    expect(await db.decisionsDao.watchAssumptions('d2').first, hasLength(1));
+  });
+
   test('editing a decision keeps v1 and adds a new version', () async {
     final decision = DecisionsCompanion.insert(
       id: 'd1',
